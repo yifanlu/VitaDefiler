@@ -9,7 +9,7 @@ using System.Threading;
 using Mono.Cecil.Metadata;
 using Mono.Debugger.Soft;
 
-namespace VitaDefiler
+namespace VitaDefiler.PSM
 {
     public enum PsmDeviceType
     {

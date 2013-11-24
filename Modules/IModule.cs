@@ -7,6 +7,6 @@ namespace VitaDefiler.Modules
 {
     interface IModule
     {
-        public bool Run(Device dev, string cmd, string[] args);
+        bool Run(Device dev, string cmd, string[] args);
     }
 }

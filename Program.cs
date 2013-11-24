@@ -21,7 +21,7 @@ namespace VitaDefiler
             }
 
             // intitalize USB/exploit
-            Device dev = new Device();
+            Device dev = new Device(null, null);
 
             // wait for commands
             while (true)

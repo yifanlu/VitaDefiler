@@ -17,11 +17,11 @@ namespace VitaDefiler
         public Network Network { get; private set; }
         public USB USB { get; private set; }
 
-        public Device()
+        public Device(USB usb, Network net)
         {
             Vars = new List<Variable>();
-            Network = new Network();
-            USB = new USB();
+            Network = net;
+            USB = usb;
         }
 
         public int CreateVariable(uint addr, uint size, bool isCode)
