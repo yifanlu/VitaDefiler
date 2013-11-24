@@ -36,6 +36,7 @@ namespace VitaDefiler.Modules
 
         public void Execute(Device dev, uint addr)
         {
+            Console.Error.WriteLine("Return value: 0x{0:X}", dev.Network.RunCommand(Command.Execute, (int)addr));
         }
     }
 }

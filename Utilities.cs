@@ -17,19 +17,14 @@ namespace VitaDefiler
                     case '$':
                         {
                             int idx;
-                            if (Int32.TryParse(self.Substring(1), out idx) && vita.Code.Count > idx)
+                            if (Int32.TryParse(self.Substring(1), out idx) && vita.Vars.Count > idx)
                             {
-                                v = vita.Code[idx];
+                                v = vita.Vars[idx];
                             }
                             break;
                         }
                     case '%':
                         {
-                            int idx;
-                            if (Int32.TryParse(self.Substring(1), out idx) && vita.Data.Count > idx)
-                            {
-                                v = vita.Data[idx];
-                            }
                             break;
                         }
                     default:
@@ -139,7 +134,7 @@ namespace VitaDefiler
                 Console.Write("| ");
                 // ascii value
                 for (i = num; i > 0; i--)
-                {
+                {C:\Users\Yifan\Dropbox\development\CS\VitaDefiler\VitaDefiler\Utilities.cs
                     if (j - i < size)
                     {
                         Console.Write("{0}", data[j - i] < 32 || data[j - i] > 126 ? "." : Char.ToString((char)data[j - i])); // print only visible characters

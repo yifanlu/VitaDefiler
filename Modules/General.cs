@@ -24,7 +24,7 @@ vars                            Print list of variables
 
 Paramaters:
 addr    Can be either an integer address (ex: 0x81000000) or a variable of form
-        $x (for code variables) or %x (for data variables).
+        $x (for code/data variables) or %x (for local variables).
 length  Can be a hex number (ex: 0x1000), a decimal number (ex: 256), or a data type 
         including int, uint, char, short, float, long, double etc. int/uint can also 
         be qualified with size, for example: int64 or uint16.
