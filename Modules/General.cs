@@ -63,25 +63,14 @@ file    Filename relative to current working directory or absolute path.
 
         public void PrintVars(Device dev)
         {
-            Console.WriteLine("Data variables:");
-            var dataVars = dev.Data;
+            var dataVars = dev.Vars;
             for (int i = 0; i < dataVars.Count; i++)
             {
                 if (dataVars[i].Data == 0)
                 {
                     continue;
                 }
-                Console.WriteLine("%{0}: 0x{1:X}, size: 0x{2:X}", i, dataVars[i].Data, dataVars[i].Size);
-            }
-            Console.WriteLine("Code variables:");
-            var codeVars = dev.Code;
-            for (int i = 0; i < codeVars.Count; i++)
-            {
-                if (codeVars[i].Data == 0)
-                {
-                    continue;
-                }
-                Console.WriteLine("${0}: 0x{1:X}, size: 0x{2:X}", i, codeVars[i].Data, codeVars[i].Size);
+                Console.WriteLine("${0}: 0x{1:X}, size: 0x{2:X}, code: {3}", i, dataVars[i].Data, dataVars[i].Size, dataVars[i].IsCode);
             }
         }
     }

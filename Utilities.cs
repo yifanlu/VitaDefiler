@@ -52,7 +52,7 @@ namespace VitaDefiler
                 {
                     data = Convert.ToUInt32(self, 16);
                 }
-                catch (FormatException ex)
+                catch (FormatException)
                 {
                 }
             }
@@ -134,7 +134,7 @@ namespace VitaDefiler
                 Console.Write("| ");
                 // ascii value
                 for (i = num; i > 0; i--)
-                {C:\Users\Yifan\Dropbox\development\CS\VitaDefiler\VitaDefiler\Utilities.cs
+                {
                     if (j - i < size)
                     {
                         Console.Write("{0}", data[j - i] < 32 || data[j - i] > 126 ? "." : Char.ToString((char)data[j - i])); // print only visible characters
