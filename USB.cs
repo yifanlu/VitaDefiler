@@ -48,7 +48,7 @@ namespace VitaDefiler
             _vita.Stop();
         }
 
-        public void StartDump(uint addr, uint len, FileStream dump)
+        public void StartDump(uint addr, uint len, FileStream dump = null)
         {
             if (len == 0)
             {
@@ -97,7 +97,10 @@ namespace VitaDefiler
             {
                 try
                 {
-                    dump.Flush();
+                    if (dump != null)
+                    {
+                        dump.Flush();
+                    }
                     Console.WriteLine("Dumping 0x{0:X}", src.Fields[0].Value);
                     ValueImpl ret = _vita.RunMethod(methid_copy, null, new ValueImpl[] { src, dest, sti, dlen }, true);
                     if (ret == null)
@@ -105,13 +108,17 @@ namespace VitaDefiler
                         throw new TargetException("Method never returned.");
                     }
                     _vita.GetBuffer(dest.Objid, BLOCK_SIZE, ref block);
-#if PRINT_DUMP
-					PrintHexDump (block, (uint)BLOCK_SIZE, 16);
-#endif
+                    if (dump == null)
+                    {
+                        block.PrintHexDump((uint)BLOCK_SIZE, 16);
+                    }
                     int num = BLOCK_SIZE;
                     if (d * BLOCK_SIZE + num > len)
                         num = (int)(len - d * BLOCK_SIZE);
-                    dump.Write(block, 0, num);
+                    if (dump != null)
+                    {
+                        dump.Write(block, 0, num);
+                    }
                 }
                 catch (InvalidOperationException) // vm not suspended, retry
                 {
@@ -125,7 +132,10 @@ namespace VitaDefiler
                     int num = BLOCK_SIZE;
                     if (d * BLOCK_SIZE + num > len)
                         num = (int)(len - d * BLOCK_SIZE);
-                    dump.Write(error_block, 0, num);
+                    if (dump != null)
+                    {
+                        dump.Write(error_block, 0, num);
+                    }
                 }
                 // next block to dump
                 src.Fields[0].Value = (Int64)src.Fields[0].Value + BLOCK_SIZE;
@@ -136,7 +146,10 @@ namespace VitaDefiler
                     _vita.Suspend();
                 }
             }
-            dump.Close();
+            if (dump != null)
+            {
+                dump.Close();
+            }
             _vita.Resume();
         }
 

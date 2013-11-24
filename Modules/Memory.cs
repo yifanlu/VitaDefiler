@@ -74,6 +74,10 @@ namespace VitaDefiler.Modules
                     {
                         fout.Write(data, 0, (int)size);
                     }
+                    else
+                    {
+                        data.PrintHexDump(size, 16);
+                    }
                 }
                 fout.Close();
             }
