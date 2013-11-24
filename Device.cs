@@ -68,13 +68,5 @@ namespace VitaDefiler
             }
             return 0;
         }
-
-        public void ConnectUSB()
-        {
-        }
-
-        public void ConnectNetwork()
-        {
-        }
     }
 }

@@ -38,9 +38,9 @@ namespace VitaDefiler
             return (uint)val;
         }
 
-        public void Connect()
+        public void Connect(Action<string> consoleCallback)
         {
-            _vita.Start();
+            _vita.Start(consoleCallback);
         }
 
         public void Disconnect()
@@ -333,11 +333,6 @@ namespace VitaDefiler.PSM
             this.package = package;
         }
 
-        private static void ConsoleOutput(string message)
-        {
-            Console.WriteLine("[Vita Output] {0}", message);
-        }
-
         private void HandleConnErrorHandler(object sender, ErrorHandlerEventArgs args)
         {
             Console.WriteLine("Error: {0}", args.ErrorCode);
@@ -364,7 +359,7 @@ namespace VitaDefiler.PSM
             throw new NotImplementedException(String.Format("{0}", args.ErrorCode));
         }
 
-        public void Start()
+        public void Start(Action<string> consoleCallback)
         {
             Console.WriteLine("Waiting for Vita to connect...");
             ScePsmDevice? vita = null;
@@ -393,7 +388,7 @@ namespace VitaDefiler.PSM
                 throw new IOException("Cannot connect to Vita.");
             }
             this.handle = devId;
-            PsmDeviceConsoleCallback callback = new PsmDeviceConsoleCallback(ConsoleOutput);
+            PsmDeviceConsoleCallback callback = new PsmDeviceConsoleCallback(consoleCallback);
             Console.WriteLine("Setting console callback.");
             PSMFunctions.SetConsoleWrite(this.handle, Marshal.GetFunctionPointerForDelegate(callback));
 
