@@ -68,6 +68,16 @@ namespace VitaDefiler
             return RunCommand(cmd, BitConverter.GetBytes(data));
         }
 
+        public Command RunCommand(Command cmd, int[] data, out byte[] resp)
+        {
+            byte[] bdata = new byte[data.Length * sizeof(int)];
+            for (int i = 0; i < data.Length; i++)
+            {
+                Array.Copy(BitConverter.GetBytes(data[i]), 0, bdata, i * sizeof(int), sizeof(int));
+            }
+            return RunCommand(cmd, bdata, out resp);
+        }
+
         public int RunCommand(Command cmd, byte[] data)
         {
             byte[] resp;

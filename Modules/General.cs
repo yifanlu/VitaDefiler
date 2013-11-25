@@ -13,7 +13,7 @@ alloc type length               Allocates space for a variable. Type is
                                 'data' or 'code'.
 compile addr file.c             Compiles file.c and load code into memory.
 echo [text]                     Prints text to Vita/console screen
-exec addr                       Executes code located at address.
+exec addr [arg0] ... [arg3]     Executes code located at address with args.
 free addr                       Frees memory allocated at addr.
 usbread addr length [file]      Uses USB to dump address. Optional file to 
                                 capture output to. Optional length to read.

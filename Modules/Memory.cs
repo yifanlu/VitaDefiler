@@ -65,7 +65,7 @@ namespace VitaDefiler.Modules
                 {
                     uint size = l + BLOCK_SIZE > length ? length % BLOCK_SIZE : BLOCK_SIZE;
                     Console.Error.WriteLine("Dumping 0x{0:X}", addr + l);
-                    if (dev.Network.RunCommand(Command.ReadData, BitConverter.GetBytes(size), out data) == Command.Error)
+                    if (dev.Network.RunCommand(Command.ReadData, new int[]{(int)(addr+l), (int)size}, out data) == Command.Error)
                     {
                         Console.WriteLine("Read failed.");
                         break;
@@ -89,41 +89,53 @@ namespace VitaDefiler.Modules
 
         public void USBRead(Device dev, uint addr, uint length, string file = null)
         {
+            FileStream fs = file == null ? null : File.OpenWrite(file);
+            dev.USB.StartDump(addr, length, fs);
+            fs.Close();
         }
 
         public void Write(Device dev, uint addr, uint length, bool isCode, uint data = 0, string file = null)
         {
-            bool fromfile = file != null && File.Exists(file);
-            if (!fromfile)
+            byte[] resp;
+            if (file == null || !File.Exists(file))
             {
-                length = sizeof(UInt32);
-            }
-            try
-            {
-                FileStream fin = fromfile ? File.OpenRead(file) : null;
-                byte[] buf = fromfile ? new byte[BLOCK_SIZE] : BitConverter.GetBytes((int)data);
-                for (uint l = 0; l < length; l += BLOCK_SIZE)
+                if (dev.Network.RunCommand(isCode ? Command.WriteCode : Command.WriteData, new int[] { (int)addr, (int)length, (int)data }, out resp) == Command.Error)
                 {
-                    uint size = l + BLOCK_SIZE > length ? length % BLOCK_SIZE : BLOCK_SIZE;
-                    Console.Error.WriteLine("Writing 0x{0:X}", addr + l);
-                    if (fromfile)
-                    {
-                        fin.Read(buf, 0, (int)size);
-                    }
-                    if (dev.Network.RunCommand(isCode ? Command.WriteCode : Command.WriteData, BitConverter.GetBytes(size), out buf) == Command.Error)
-                    {
-                        Console.WriteLine("Read failed.");
-                        break;
-                    }
+                    Console.Error.WriteLine("Write failed.");
                 }
-                if (fromfile)
+                else
                 {
+                    Console.Error.WriteLine("Wrote 0x{0:X} byte.", BitConverter.ToInt32(resp, 0));
+                }
+            }
+            else
+            {
+                try
+                {
+                    FileStream fin = File.OpenRead(file);
+                    byte[] buf = new byte[BLOCK_SIZE + sizeof(int)];
+                    for (uint l = 0; l < length; l += BLOCK_SIZE)
+                    {
+                        uint size = l + BLOCK_SIZE > length ? length % BLOCK_SIZE : BLOCK_SIZE;
+                        Console.Error.WriteLine("Writing 0x{0:X}", addr + l);
+                        Array.Copy(BitConverter.GetBytes(addr), 0, buf, 0, sizeof(int));
+                        fin.Read(buf, sizeof(int), (int)size);
+                        if (dev.Network.RunCommand(isCode ? Command.WriteCode : Command.WriteData, buf, out resp) == Command.Error)
+                        {
+                            Console.Error.WriteLine("Write failed.");
+                            break;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("Wrote 0x{0:X} byte.", BitConverter.ToInt32(resp, 0));
+                        }
+                    }
                     fin.Close();
                 }
-            }
-            catch (IOException ex)
-            {
-                Console.Error.WriteLine("Error writing to file: {0}", ex.Message);
+                catch (IOException ex)
+                {
+                    Console.Error.WriteLine("Error writing to file: {0}", ex.Message);
+                }
             }
         }
 

@@ -20,9 +20,15 @@ namespace VitaDefiler.Modules
                     break;
                 case "execute":
                 case "exec":
-                    if (args.Length == 1)
+                    if (args.Length >= 1)
                     {
-                        Execute(dev, args[0].ToVariable(dev).Data);
+                        int[] callargs = new int[args.Length - 1];
+                        for (int i = 0; i < args.Length; i++)
+                        {
+                            Variable v = args[i].ToVariable(dev);
+                            callargs[i] = (int)v.Data;
+                        }
+                        Execute(dev, callargs);
                         return true;
                     }
                     break;
@@ -34,9 +40,11 @@ namespace VitaDefiler.Modules
         {
         }
 
-        public void Execute(Device dev, uint addr)
+        public void Execute(Device dev, int[] args)
         {
-            Console.Error.WriteLine("Return value: 0x{0:X}", dev.Network.RunCommand(Command.Execute, (int)addr));
+            byte[] resp;
+            dev.Network.RunCommand(Command.Execute, args, out resp);
+            Console.Error.WriteLine("Return value: 0x{0:X}", BitConverter.ToInt32(resp, 0));
         }
     }
 }
