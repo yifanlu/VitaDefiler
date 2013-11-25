@@ -15,7 +15,7 @@ namespace VitaDefiler
     {
         private static readonly int BLOCK_SIZE = 0x100;
         private static readonly uint MONO_IMAGES_HASHMAP_POINTER = 0x81465678;
-        private static readonly string INSTALL_NAME = "VitaDefiler";
+        private static readonly string INSTALL_NAME = "VitaDefilerClient";
 
         private Vita _vita;
 
@@ -66,9 +66,9 @@ namespace VitaDefiler
             ValueImpl src = v.CreateIntPtr(UIntToVitaInt(addr));
             ValueImpl dest = v.CreateArray("System.Byte", BLOCK_SIZE);
              */
-            ValueImpl dest = _vita.GetField(false, "DumpMemory.AppMain", "dest");
+            ValueImpl dest = _vita.GetField(false, "VitaDefilerClient.AppMain", "dest");
             dest.Type = ElementType.Object; // must be done
-            ValueImpl src = _vita.GetField(false, "DumpMemory.AppMain", "src");
+            ValueImpl src = _vita.GetField(false, "VitaDefilerClient.AppMain", "src");
             if (dest == null)
             {
                 Console.WriteLine("Cannot find buffer to write to.");
@@ -227,6 +227,17 @@ namespace VitaDefiler
 
             }
         }
+
+        public void StartNetworkListener()
+        {
+            /*
+            ValueImpl ready = new ValueImpl();
+            ready.Value = true;
+            _vita.SetField(false, "VitaDefilerClient.AppMain", "exploited", ready);
+             */
+            long methid_exploit = _vita.GetMethod(false, "VitaDefilerClient.CommandListener", "StartListener", 0, null);
+            _vita.RunMethod(methid_exploit, null, null);
+        }
     }
 }
 
@@ -343,7 +354,7 @@ namespace VitaDefiler.PSM
         {
             this.port = portstr;
             this.name = name;
-            this.package = package;
+            this.package = Path.GetFullPath(package);
         }
 
         private void HandleConnErrorHandler(object sender, ErrorHandlerEventArgs args)
@@ -567,6 +578,33 @@ namespace VitaDefiler.PSM
                 return null;
             }
             return values[0];
+        }
+
+        public void SetField(bool incorlib, string typename, string fieldname, ValueImpl value)
+        {
+            long assembly = incorlib ? corlibid : assid;
+            long typeid = conn.Assembly_GetType(assembly, typename, false);
+            string[] f_names;
+            long[] f_types;
+            int[] f_attrs;
+            long[] fields = conn.Type_GetFields(typeid, out f_names, out f_types, out f_attrs);
+            long targetfield = -1;
+
+            int i;
+            for (i = 0; i < f_names.Length; i++)
+            {
+                if (f_names[i] == fieldname)
+                {
+                    targetfield = fields[i];
+                    break;
+                }
+            }
+            if (targetfield < 0)
+            {
+                Console.Error.WriteLine("Cannot find field '{0}'", fieldname);
+                return;
+            }
+            conn.Type_SetValues(typeid, new long[] { targetfield }, new ValueImpl[] { value });
         }
 
         public void GetBuffer(long objid, int len, ref byte[] buf)

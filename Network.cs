@@ -101,22 +101,21 @@ namespace VitaDefiler
             try
             {
                 // create and send packet
-                byte[] packet = new byte[data.Length + 8];
-                BitConverter.GetBytes(((ulong)cmd << 32) | (uint)data.Length);
-                Array.Copy(BitConverter.GetBytes((int)cmd), 0, packet, 0, 4);
-                Array.Copy(BitConverter.GetBytes(data.Length), 0, packet, 4, 4);
-                Array.Copy(data, 0, packet, 8, data.Length);
+                byte[] packet = new byte[data.Length + 2 * sizeof(int)];
+                Array.Copy(BitConverter.GetBytes((int)cmd), 0, packet, 0, sizeof(int));
+                Array.Copy(BitConverter.GetBytes(data.Length), 0, packet, sizeof(int), sizeof(int));
+                Array.Copy(data, 0, packet, 2 * sizeof(int), data.Length);
                 _sock.Send(packet);
                 // recieve packet
-                int length = 8;
+                int length = 2 * sizeof(int);
                 int total = 0;
-                byte[] recv = new byte[8];
+                byte[] recv = new byte[2 * sizeof(int)];
                 while (total < length)
                 {
                     total += _sock.Receive(recv, total, length - total, SocketFlags.None);
                 }
                 Command resp = (Command)BitConverter.ToInt32(recv, 0);
-                length = BitConverter.ToInt32(recv, 4);
+                length = BitConverter.ToInt32(recv, sizeof(int));
                 total = 0;
                 // recieve response
                 response = new byte[length];
