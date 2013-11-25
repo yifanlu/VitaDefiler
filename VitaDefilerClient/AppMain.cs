@@ -32,6 +32,7 @@ namespace VitaDefilerClient
             Render ();
 			
 			CommandListener.InitializeNetwork ();
+			typeof(NativeFunctions).GetMethods(); // take care of lazy init
 			
 			Console.WriteLine("XXVCMDXX:DONE"); // signal PC
 

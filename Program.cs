@@ -80,11 +80,8 @@ namespace VitaDefiler
 
             // exploit vita
             usb.EscalatePrivilege();
-            Thread listener = new Thread(() =>
-            {
-                usb.StartNetworkListener();
-            });
-            listener.Start();
+            usb.StartNetworkListener();
+            Console.Error.WriteLine("Vita exploited.");
 
             // set up network
             Network net = new Network();

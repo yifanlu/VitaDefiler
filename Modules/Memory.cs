@@ -17,21 +17,21 @@ namespace VitaDefiler.Modules
                 case "usbread":
                     if (args.Length >= 2)
                     {
-                        USBRead(dev, args[0].ToVariable(dev).Data, args[1].ToInteger(), args.Length > 2 ? args[2] : null);
+                        USBRead(dev, args[0].ToVariable(dev).Data, args[1].ToDataSize(), args.Length > 2 ? args[2] : null);
                         return true;
                     }
                     break;
                 case "read":
                     if (args.Length >= 2)
                     {
-                        Read(dev, args[0].ToVariable(dev).Data, args[1].ToInteger(), args.Length > 2 ? args[2] : null);
+                        Read(dev, args[0].ToVariable(dev).Data, args[1].ToDataSize(), args.Length > 2 ? args[2] : null);
                         return true;
                     }
                     break;
                 case "write":
                     if (args.Length >= 3)
                     {
-                        Write(dev, args[0].ToVariable(dev).Data, args[1].ToInteger(), args[0].ToVariable(dev).IsCode, args[2].ToInteger(), args[2]);
+                        Write(dev, args[0].ToVariable(dev).Data, args[1].ToDataSize(), args[0].ToVariable(dev).IsCode, args[2].ToInteger(), args[2]);
                         return true;
                     }
                     break;
@@ -39,7 +39,7 @@ namespace VitaDefiler.Modules
                 case "alloc":
                     if (args.Length == 2)
                     {
-                        Allocate(dev, args[1].ToInteger(), args[0] == "code" ? true : false);
+                        Allocate(dev, args[1].ToDataSize(), args[0] == "code" ? true : false);
                         return true;
                     }
                     break;
@@ -79,7 +79,10 @@ namespace VitaDefiler.Modules
                         data.PrintHexDump(size, 16);
                     }
                 }
-                fout.Close();
+                if (tofile)
+                {
+                    fout.Close();
+                }
             }
             catch (IOException ex)
             {
@@ -147,8 +150,8 @@ namespace VitaDefiler.Modules
             uint addr = (uint)dev.Network.RunCommand(isCode ? Command.AllocateCode : Command.AllocateData, (int)length);
             if (addr > 0)
             {
-                Console.Error.WriteLine("Allocated at 0x{0:X}", addr);
-                dev.CreateVariable(addr, length, isCode);
+                int idx = dev.CreateVariable(addr, length, isCode);
+                Console.Error.WriteLine("Allocated variable ${0} at 0x{1:X}", idx, addr);
             }
             else
             {

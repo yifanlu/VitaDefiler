@@ -29,7 +29,7 @@ namespace VitaDefilerClient
 		[SecurityCritical]
 		public static void Write(IntPtr dest, byte[] src, int offset)
 		{
-			Marshal.Copy(src, offset, dest, src.Length);
+			Marshal.Copy(src, offset, dest, src.Length-offset);
 		}
 
 		[SecurityCritical]

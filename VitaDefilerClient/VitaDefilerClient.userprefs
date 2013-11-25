@@ -2,8 +2,8 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="CommandListener.cs">
     <Files>
-      <File FileName="AppMain.cs" Line="36" Column="52" />
-      <File FileName="CommandListener.cs" Line="75" Column="6" />
+      <File FileName="AppMain.cs" Line="18" Column="36" />
+      <File FileName="CommandListener.cs" Line="28" Column="75" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

@@ -36,8 +36,8 @@ namespace VitaDefiler
 
                 _sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _sock.Connect(remoteEP);
-                _sock.SendTimeout = 10000;
-                _sock.ReceiveTimeout = 10000;
+                //_sock.SendTimeout = 10000;
+                //_sock.ReceiveTimeout = 10000;
                 return true;
             }
             catch (Exception ex)
@@ -81,7 +81,7 @@ namespace VitaDefiler
         public int RunCommand(Command cmd, byte[] data)
         {
             byte[] resp;
-            if (RunCommand(cmd, data, out resp) != Command.Error)
+            if (RunCommand(cmd, data, out resp) != Command.Error && resp.Length > 0)
             {
                 return BitConverter.ToInt32(resp, 0);
             }
@@ -105,6 +105,10 @@ namespace VitaDefiler
                 Array.Copy(BitConverter.GetBytes((int)cmd), 0, packet, 0, sizeof(int));
                 Array.Copy(BitConverter.GetBytes(data.Length), 0, packet, sizeof(int), sizeof(int));
                 Array.Copy(data, 0, packet, 2 * sizeof(int), data.Length);
+#if DEBUG
+                Console.Error.WriteLine("Sending packet of {0} bytes.", packet.Length);
+                packet.PrintHexDump((uint)packet.Length, 16);
+#endif
                 _sock.Send(packet);
                 // recieve packet
                 int length = 2 * sizeof(int);
@@ -117,19 +121,26 @@ namespace VitaDefiler
                 Command resp = (Command)BitConverter.ToInt32(recv, 0);
                 length = BitConverter.ToInt32(recv, sizeof(int));
                 total = 0;
+#if DEBUG
+                Console.Error.WriteLine("Recieving header of {0} bytes.", recv.Length);
+                recv.PrintHexDump((uint)recv.Length, 16);
+#endif
                 // recieve response
                 response = new byte[length];
                 while (total < length)
                 {
                     total += _sock.Receive(response, total, length - total, SocketFlags.None);
                 }
+#if DEBUG
+                Console.Error.WriteLine("Recieving response of {0} bytes.", response.Length);
+#endif
                 // check for error
                 if (resp == Command.Error)
                 {
                     Console.Error.WriteLine("Error from Vita: {0}", Encoding.ASCII.GetString(response));
                     response = new byte[0];
                 }
-                return cmd;
+                return resp;
             }
             catch (Exception ex)
             {

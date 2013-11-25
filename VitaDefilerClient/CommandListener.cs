@@ -104,7 +104,10 @@ namespace VitaDefilerClient
             byte[] packet = new byte[resp.Length + 8];
             Array.Copy(BitConverter.GetBytes((int)resp_cmd), 0, packet, 0, sizeof(int));
             Array.Copy(BitConverter.GetBytes(resp.Length), 0, packet, sizeof(int), sizeof(int));
-            Array.Copy(data, 0, packet, 8, resp.Length);
+            Array.Copy(resp, 0, packet, 8, resp.Length);
+#if DEBUG
+			Console.WriteLine("Response: {0}", BitConverter.ToString(packet));
+#endif
             sock.Send(packet);
 		}
 		
@@ -127,8 +130,11 @@ namespace VitaDefilerClient
 					case Command.AllocateCode:
 					{
 						int len = BitConverter.ToInt32(data, 0);
-						int ret = NativeFunctions.Execute(PSS_CODE_MEM_ALLOC, len, 0, 0, 0);
+						IntPtr lenp = NativeFunctions.AllocData(4);
+						NativeFunctions.Write(lenp, BitConverter.GetBytes(len), 4);
+						int ret = NativeFunctions.Execute(PSS_CODE_MEM_ALLOC, lenp.ToInt32(), 0, 0, 0);
 						resp = BitConverter.GetBytes(ret);
+						NativeFunctions.FreeData(lenp);
 						break;
 					}
 					case Command.FreeData:
@@ -168,8 +174,8 @@ namespace VitaDefilerClient
 					}
 					case Command.Execute:
 					{
-						int[] args = new int[data.Length / sizeof(int)];
-						for (int i = 0; i < args.Length; i++)
+						int[] args = new int[5];
+						for (int i = 0; i < data.Length / sizeof(int); i++)
 						{
 							args[i] = BitConverter.ToInt32(data, i * sizeof(int));
 						}

@@ -14,7 +14,7 @@
   .hash algorithm 0x00008004
   .ver  0:0:0:0
 }
-.module NativeFunctions.dll // GUID = {166F18BC-1BB6-4A5E-9FA0-05CB64286727}
+.module NativeFunctions.dll // GUID = {C3D3602D-E68B-4289-9AFB-C3C7273522BF}
 
 .custom instance void class [mscorlib]System.Security.UnverifiableCodeAttribute::'.ctor'() =  (01 00 00 00 ) // ....
 
@@ -91,7 +91,7 @@
         .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
 
         // Method begins at RVA 0x2075
-	// Code size 12 (0xc)
+	// Code size 14 (0xe)
 	.maxstack 8
 	IL_0000:  ldarg.1 
 	IL_0001:  ldarg.2 
@@ -99,8 +99,10 @@
 	IL_0003:  ldarg.1 
 	IL_0004:  ldlen 
 	IL_0005:  conv.i4 
-	IL_0006:  call void class [mscorlib]System.Runtime.InteropServices.Marshal::Copy(unsigned int8[], int32, native int, int32)
-	IL_000b:  ret 
+	IL_0006:  ldarg.2 
+	IL_0007:  sub 
+	IL_0008:  call void class [mscorlib]System.Runtime.InteropServices.Marshal::Copy(unsigned int8[], int32, native int, int32)
+	IL_000d:  ret 
     } // end of method NativeFunctions::Write
 
     // method line 6
@@ -109,6 +111,7 @@
     {
         .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
 
+        // Method begins at RVA 0x2084
         ldarg 4
         ldarg.3
         ldarg.2

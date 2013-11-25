@@ -63,7 +63,7 @@ namespace VitaDefiler
             return data;
         }
 
-        public static int ToDataSize(this string self)
+        public static uint ToDataSize(this string self)
         {
             switch (self)
             {
@@ -102,10 +102,7 @@ namespace VitaDefiler
 #endif
                     return 1;
                 default:
-#if DEBUG
-                    Console.Error.WriteLine("Parsed '{0}' to {1}", self, 0);
-#endif
-                    return 0;
+                    return self.ToInteger();
             }
         }
 
