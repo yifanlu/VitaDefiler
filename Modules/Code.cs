@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -15,9 +16,9 @@ namespace VitaDefiler.Modules
             switch (cmd)
             {
                 case "compile":
-                    if (args.Length == 3)
+                    if (args.Length == 2)
                     {
-                        Compile(dev, args[1], args[0].ToVariable(dev).Data, args[2]);
+                        Compile(dev, args[0], args[1]);
                         return true;
                     }
                     break;
@@ -39,7 +40,7 @@ namespace VitaDefiler.Modules
             return false;
         }
 
-        public void Compile(Device dev, string file, uint addr, string output)
+        public void Compile(Device dev, string file, string output)
         {
             if (!File.Exists(file))
             {
@@ -60,7 +61,7 @@ namespace VitaDefiler.Modules
                 Console.Error.WriteLine("GCC did not produce a valid output");
                 return;
             }
-            ProcessStartInfo info = new ProcessStartInfo(){
+            info = new ProcessStartInfo(){
                 FileName = "arm-none-eabi-objcopy.exe",
                 Arguments = string.Format("-O binary {0} {1}", TEMP_OBJECT, output),
                 RedirectStandardOutput = true,

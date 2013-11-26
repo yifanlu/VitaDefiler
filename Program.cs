@@ -140,7 +140,9 @@ namespace VitaDefiler
             }
 
             // cleanup
+#if CLEAN_EXIT
             usb.Disconnect();
+#endif
         }
     }
 }

@@ -460,14 +460,12 @@ namespace VitaDefiler.PSM
             Console.WriteLine("Stopping debugger.");
             conn.Close();
             conn = null;
-#if CLEAN_EXIT
             Console.WriteLine("Killing running app.");
             PSMFunctions.Kill(this.handle);
             Console.WriteLine("Uninstalling app.");
             PSMFunctions.Uninstall(this.handle, name);
             Console.WriteLine("Disconnecting Vita.");
             PSMFunctions.Disconnect(this.handle);
-#endif
         }
 
         public void Suspend()

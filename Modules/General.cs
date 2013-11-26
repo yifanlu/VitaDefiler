@@ -11,7 +11,7 @@ namespace VitaDefiler.Modules
 Commands:
 alloc type length               Allocates space for a variable. Type is 
                                 'data' or 'code'.
-compile addr file.c file        Compiles file.c and produce file.
+compile file.c file             Compiles file.c to produce file.
 echo [text]                     Prints text to Vita/console screen
 exec addr [arg0] ... [arg3]     Executes code located at address with args.
 free addr                       Frees memory allocated at addr.
