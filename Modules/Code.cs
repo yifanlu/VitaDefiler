@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -7,14 +8,16 @@ namespace VitaDefiler.Modules
 {
     class Code : IModule
     {
+    	private static readonly string TEMP_OBJECT = "code.o";
+
         public bool Run(Device dev, string cmd, string[] args)
         {
             switch (cmd)
             {
                 case "compile":
-                    if (args.Length == 2)
+                    if (args.Length == 3)
                     {
-                        Compile(dev, args[1], args[0].ToVariable(dev).Data);
+                        Compile(dev, args[1], args[0].ToVariable(dev).Data, args[2]);
                         return true;
                     }
                     break;
@@ -36,8 +39,41 @@ namespace VitaDefiler.Modules
             return false;
         }
 
-        public void Compile(Device dev, string file, uint addr)
+        public void Compile(Device dev, string file, uint addr, string output)
         {
+            if (!File.Exists(file))
+            {
+                Console.Error.WriteLine("Cannot find {0}", file);
+                return;
+            }
+            ProcessStartInfo info = new ProcessStartInfo(){
+                FileName = "arm-none-eabi-gcc.exe",
+                Arguments = string.Format("-fPIE -fno-zero-initialized-in-bss -std=c99 -mcpu=cortex-a9 -D DEBUG -mthumb-interwork -mthumb -c -o {0} {1}", TEMP_OBJECT, file),
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            };
+            Process gcc = Process.Start(info);
+            Console.Error.WriteLine(gcc.StandardOutput.ReadToEnd());
+            gcc.WaitForExit();
+            if (!File.Exists(TEMP_OBJECT))
+            {
+                Console.Error.WriteLine("GCC did not produce a valid output");
+                return;
+            }
+            ProcessStartInfo info = new ProcessStartInfo(){
+                FileName = "arm-none-eabi-objcopy.exe",
+                Arguments = string.Format("-O binary {0} {1}", TEMP_OBJECT, output),
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            };
+            Process objcopy = Process.Start(info);
+            Console.Error.WriteLine(objcopy.StandardOutput.ReadToEnd());
+            objcopy.WaitForExit();
+            File.Delete(TEMP_OBJECT);
+            if (!File.Exists(output))
+            {
+                Console.Error.WriteLine("No valid binary was produced.");
+            }
         }
 
         public void Execute(Device dev, int[] args)
