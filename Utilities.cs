@@ -10,6 +10,17 @@ namespace VitaDefiler
         public static Variable ToVariable(this string self, Device vita)
         {
             Variable v = Variable.Null;
+            string[] parts = self.Split(new char[] { '+', '-' }, 2);
+            long offset = 0;
+            if (parts.Length > 1)
+            {
+                offset = parts[1].ToInteger();
+                if (self.Contains("-"))
+                {
+                    offset = -offset;
+                }
+                self = parts[0];
+            }
             if (!string.IsNullOrEmpty(self))
             {
                 switch (self[0])
@@ -20,6 +31,8 @@ namespace VitaDefiler
                             if (Int32.TryParse(self.Substring(1), out idx) && vita.Vars.Count > idx)
                             {
                                 v = vita.Vars[idx];
+                                v.Data = (uint)(v.Data + offset);
+                                v.Size = (uint)(v.Size - offset);
                             }
                             break;
                         }
@@ -46,6 +59,16 @@ namespace VitaDefiler
         public static uint ToInteger(this string self)
         {
             uint data = 0;
+            string[] parts = self.Split(new char[] { '+', '-' }, 2);
+            if (parts.Length > 1)
+            {
+                switch (self[parts[0].Length])
+                {
+                    case '+': return parts[0].ToInteger() + parts[1].ToInteger();
+                    case '-': return parts[0].ToInteger() - parts[1].ToInteger();
+                    default: throw new FormatException("Invalid operator");
+                }
+            }
             if (self.ToLowerInvariant().StartsWith("0x"))
             {
                 try
@@ -67,15 +90,6 @@ namespace VitaDefiler
         {
             switch (self)
             {
-                case "int64":
-                case "uint64":
-                case "long":
-                case "ulong":
-                case "double":
-#if DEBUG
-                    Console.Error.WriteLine("Parsed '{0}' to {1}", self, 8);
-#endif
-                    return 8;
                 case "int32":
                 case "uint32":
                 case "int":

@@ -22,9 +22,9 @@ namespace VitaDefiler.Modules
                     }
                     break;
                 case "read":
-                    if (args.Length >= 2)
+                    if (args.Length >= 1)
                     {
-                        Read(dev, args[0].ToVariable(dev).Data, args[1].ToDataSize(), args.Length > 2 ? args[2] : null);
+                        Read(dev, args[0].ToVariable(dev).Data, args.Length > 1 ? args[1].ToDataSize() : args[0].ToVariable(dev).Size, args.Length > 2 ? args[2] : null);
                         return true;
                     }
                     break;
@@ -46,7 +46,7 @@ namespace VitaDefiler.Modules
                 case "free":
                     if (args.Length == 1)
                     {
-                        Free(dev, args[0].ToVariable(dev).Data, args[0].ToVariable(dev).IsCode);
+                        Free(dev, args[0].ToVariable(dev));
                         return true;
                     }
                     break;
@@ -56,10 +56,14 @@ namespace VitaDefiler.Modules
 
         public void Read(Device dev, uint addr, uint length, string file = null)
         {
-            bool tofile = file != null && length == 0 && !UInt32.TryParse(file, out length);
+            if (addr == 0 || length == 0)
+            {
+                Console.Error.WriteLine("Ignoring invalid read request. Are your params correct?");
+                return;
+            }
             try
             {
-                FileStream fout = tofile ? File.OpenWrite(file) : null;
+                FileStream fout = file != null ? File.Open(file, FileMode.Truncate) : null;
                 byte[] data = new byte[BLOCK_SIZE];
                 for (uint l = 0; l < length; l += BLOCK_SIZE)
                 {
@@ -70,7 +74,7 @@ namespace VitaDefiler.Modules
                         Console.WriteLine("Read failed.");
                         break;
                     }
-                    if (tofile)
+                    if (file != null)
                     {
                         fout.Write(data, 0, (int)size);
                     }
@@ -79,7 +83,7 @@ namespace VitaDefiler.Modules
                         data.PrintHexDump(size, 16);
                     }
                 }
-                if (tofile)
+                if (file != null)
                 {
                     fout.Close();
                 }
@@ -92,6 +96,11 @@ namespace VitaDefiler.Modules
 
         public void USBRead(Device dev, uint addr, uint length, string file = null)
         {
+            if (length == 0)
+            {
+                Console.Error.WriteLine("Ignoring request to read 0 bytes. Are your params correct?");
+                return;
+            }
             FileStream fs = file == null ? null : File.OpenWrite(file);
             dev.USB.StartDump(addr, length, fs);
             if (fs != null)
@@ -102,6 +111,11 @@ namespace VitaDefiler.Modules
 
         public void Write(Device dev, uint addr, uint length, bool isCode, uint data = 0, string file = null)
         {
+            if (addr == 0 || length == 0)
+            {
+                Console.Error.WriteLine("Ignoring invalid write request. Are your params correct?");
+                return;
+            }
             byte[] resp;
             if (file == null || !File.Exists(file))
             {
@@ -119,13 +133,26 @@ namespace VitaDefiler.Modules
                 try
                 {
                     FileStream fin = File.OpenRead(file);
-                    byte[] buf = new byte[BLOCK_SIZE + sizeof(int)];
+                    byte[] buf = new byte[BLOCK_SIZE + 2 * sizeof(int)];
                     for (uint l = 0; l < length; l += BLOCK_SIZE)
                     {
                         uint size = l + BLOCK_SIZE > length ? length % BLOCK_SIZE : BLOCK_SIZE;
+                        int read = 0;
+                        while (read < size)
+                        {
+                            if ((read += fin.Read(buf, 2 * sizeof(int) + read, (int)size - read)) == read)
+                            {
+                                size = (uint)read;
+                                break;
+                            }
+                        }
+                        if (size == 0)
+                        {
+                            break;
+                        }
                         Console.Error.WriteLine("Writing 0x{0:X}", addr + l);
                         Array.Copy(BitConverter.GetBytes(addr), 0, buf, 0, sizeof(int));
-                        fin.Read(buf, sizeof(int), (int)size);
+                        Array.Copy(BitConverter.GetBytes(size), 0, buf, sizeof(int), sizeof(int));
                         if (dev.Network.RunCommand(isCode ? Command.WriteCode : Command.WriteData, buf, out resp) == Command.Error)
                         {
                             Console.Error.WriteLine("Write failed.");
@@ -147,6 +174,11 @@ namespace VitaDefiler.Modules
 
         public void Allocate(Device dev, uint length, bool isCode)
         {
+            if (length == 0)
+            {
+                Console.Error.WriteLine("Ignoring request to allocate 0 bytes. Are your params correct?");
+                return;
+            }
             uint addr = (uint)dev.Network.RunCommand(isCode ? Command.AllocateCode : Command.AllocateData, (int)length);
             if (addr > 0)
             {
@@ -159,9 +191,10 @@ namespace VitaDefiler.Modules
             }
         }
 
-        public void Free(Device dev, uint addr, bool isCode)
+        public void Free(Device dev, Variable var)
         {
-            dev.Network.RunCommand(isCode ? Command.FreeCode : Command.FreeData, (int)addr);
+            dev.Network.RunCommand(var.IsCode ? Command.FreeCode : Command.FreeData, (int)var.Data);
+            dev.DeleteVariable(var);
         }
     }
 }

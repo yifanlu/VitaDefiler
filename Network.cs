@@ -36,8 +36,8 @@ namespace VitaDefiler
 
                 _sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _sock.Connect(remoteEP);
-                //_sock.SendTimeout = 10000;
-                //_sock.ReceiveTimeout = 10000;
+                _sock.SendTimeout = 20000;
+                _sock.ReceiveTimeout = 20000;
                 return true;
             }
             catch (Exception ex)
@@ -141,6 +141,12 @@ namespace VitaDefiler
                     response = new byte[0];
                 }
                 return resp;
+            }
+            catch (SocketException ex)
+            {
+                Console.Error.WriteLine("Vita is not responding, socket error: {0}", ex.Message);
+                response = new byte[0];
+                return Command.Error;
             }
             catch (Exception ex)
             {

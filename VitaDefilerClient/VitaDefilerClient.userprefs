@@ -1,9 +1,9 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
   <MonoDevelop.Ide.Workbench ActiveDocument="CommandListener.cs">
     <Files>
-      <File FileName="AppMain.cs" Line="18" Column="36" />
-      <File FileName="CommandListener.cs" Line="28" Column="75" />
+      <File FileName="AppMain.cs" Line="36" Column="4" />
+      <File FileName="CommandListener.cs" Line="189" Column="62" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

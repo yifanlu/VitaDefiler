@@ -17,17 +17,19 @@ exec addr [arg0] ... [arg3]     Executes code located at address with args.
 free addr                       Frees memory allocated at addr.
 usbread addr length [file]      Uses USB to dump address. Optional file to 
                                 capture output to. Optional length to read.
-read addr length [file]         Uses network to dump address. Optional file 
+read addr [length] [file]       Uses network to dump address. Optional file 
                                 to capture output to. Optional length to read.
 write addr length (file|int)    Writes binary data or an integer to addr.
 vars                            Print list of variables
 
 Paramaters:
 addr    Can be either an integer address (ex: 0x81000000) or a variable of form
-        $x (for code/data variables) or %x (for local variables).
+        $x (for code/data variables) or %x (for local variables). Can also optionally 
+        include an offset in the form of $x+num or $x-num (ex: $2+0x100, $0-256, 
+        0x81000000+0x100)
 length  Can be a hex number (ex: 0x1000), a decimal number (ex: 256), or a data type 
-        including int, uint, char, short, float, long, double etc. int/uint can also 
-        be qualified with size, for example: int64 or uint16.
+        including int, uint, char, short, float, etc. int/uint can also be 
+        qualified with size, for example: int32 or uint16.
 file    Filename relative to current working directory or absolute path.
 ";
 

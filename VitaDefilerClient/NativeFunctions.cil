@@ -67,7 +67,7 @@
 
     // method line 4
     .method public static hidebysig 
-           default void Read (native int src, unsigned int8[] dest, int32 offset)  cil managed 
+           default void Read (native int src, unsigned int8[] dest, int32 offset, int32 length)  cil managed 
     {
         .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
 
@@ -77,16 +77,14 @@
 	IL_0000:  ldarg.0 
 	IL_0001:  ldarg.1 
 	IL_0002:  ldarg.2 
-	IL_0003:  ldarg.1 
-	IL_0004:  ldlen 
-	IL_0005:  conv.i4 
+	IL_0003:  ldarg.3 
 	IL_0006:  call void class [mscorlib]System.Runtime.InteropServices.Marshal::Copy(native int, unsigned int8[], int32, int32)
 	IL_000b:  ret 
     } // end of method NativeFunctions::Read
 
     // method line 5
     .method public static hidebysig 
-           default void Write (native int dest, unsigned int8[] src, int32 offset)  cil managed 
+           default void Write (native int dest, unsigned int8[] src, int32 offset, int32 length)  cil managed 
     {
         .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
 
@@ -96,11 +94,7 @@
 	IL_0000:  ldarg.1 
 	IL_0001:  ldarg.2 
 	IL_0002:  ldarg.0 
-	IL_0003:  ldarg.1 
-	IL_0004:  ldlen 
-	IL_0005:  conv.i4 
-	IL_0006:  ldarg.2 
-	IL_0007:  sub 
+	IL_0003:  ldarg.3 
 	IL_0008:  call void class [mscorlib]System.Runtime.InteropServices.Marshal::Copy(unsigned int8[], int32, native int, int32)
 	IL_000d:  ret 
     } // end of method NativeFunctions::Write
@@ -118,6 +112,56 @@
         ldarg.1
         ldarg.0
         calli int32 (native int, native int, native int, native int)
+        ret
+    } // end of method NativeFunctions::Execute
+
+    .method public static hidebysig 
+           default int32 Execute (native int addr, int32 arg0, int32 arg1, int32 arg2)  cil managed 
+    {
+        .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
+
+        // Method begins at RVA 0x2084
+        ldarg.3
+        ldarg.2
+        ldarg.1
+        ldarg.0
+        calli int32 (native int, native int, native int)
+        ret
+    } // end of method NativeFunctions::Execute
+
+    .method public static hidebysig 
+           default int32 Execute (native int addr, int32 arg0, int32 arg1)  cil managed 
+    {
+        .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
+
+        // Method begins at RVA 0x2084
+        ldarg.2
+        ldarg.1
+        ldarg.0
+        calli int32 (native int, native int)
+        ret
+    } // end of method NativeFunctions::Execute
+
+    .method public static hidebysig 
+           default int32 Execute (native int addr, int32 arg0)  cil managed 
+    {
+        .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
+
+        // Method begins at RVA 0x2084
+        ldarg.1
+        ldarg.0
+        calli int32 (native int)
+        ret
+    } // end of method NativeFunctions::Execute
+
+    .method public static hidebysig 
+           default int32 Execute (native int addr)  cil managed 
+    {
+        .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
+
+        // Method begins at RVA 0x2084
+        ldarg.0
+        calli int32 ()
         ret
     } // end of method NativeFunctions::Execute
 

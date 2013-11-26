@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Security;
 
@@ -25,20 +26,41 @@ namespace VitaDefilerClient
 		public static IntPtr src = new IntPtr(0);
 		public static byte[] dest = new byte[0x100];
         private static GraphicsContext graphics;
+		private static readonly int LOG_SIZE = 20;
+		private static string log;
+		private static Label label;
         
         public static void Main (string[] args)
         {
             InitializeGraphics ();
-            Render ();
+			
+			AppMain.LogLine("Vita Defiler Client started");
+			AppMain.LogLine("For Internal Use Only");
 			
 			CommandListener.InitializeNetwork ();
 			typeof(NativeFunctions).GetMethods(); // take care of lazy init
 			
 			Console.WriteLine("XXVCMDXX:DONE"); // signal PC
-
+			
             while (true) {
+				Update ();
+            	Render ();
             }
         }
+		
+		public static void LogLine (string format, params object[] args)
+		{
+			string line = string.Format(format, args);
+#if DEBUG
+			Console.WriteLine(line);
+#endif
+			int lines = log.Length - log.Replace("\n", "").Length;
+			if (lines >= LOG_SIZE)
+			{
+				log = log.Substring(log.IndexOf('\n')+1);
+			}
+			log += line + "\n";
+		}
 
         public static void InitializeGraphics ()
         {
@@ -47,22 +69,43 @@ namespace VitaDefilerClient
             
             // Initialize UI Toolkit
             UISystem.Initialize (graphics);
+			
+			// Init log
+			log = string.Empty;
+			for (int i = 0; i < LOG_SIZE; i++)
+			{
+				log += "\n";
+			}
 
             // Create scene
             Scene myScene = new Scene();
-            Label label = new Label();
+            label = new Label();
             label.X = 10.0f;
-            label.Y = 50.0f;
-            label.Text = "Client started!";
+            label.Y = 10.0f;
+			label.Width = graphics.Screen.Width - 20.0f;
+			label.Height = graphics.Screen.Height - 20.0f;
+			label.TextTrimming = TextTrimming.None;
             myScene.RootWidget.AddChildLast(label);
             // Set scene
             UISystem.SetScene(myScene, null);
         }
+		
+		public static void Update ()
+		{
+			// update log
+			label.Text = log;
+			
+            // Query touch for current state
+            List<TouchData> touchDataList = Touch.GetData (0);
+            
+            // Update UI Toolkit
+            UISystem.Update(touchDataList);
+		}
 
         public static void Render ()
         {
             // Clear the screen
-            graphics.SetClearColor (0.0f, 0.0f, 0.0f, 0.0f);
+            graphics.SetClearColor (0.0f, 0.0f, 255.0f, 0.0f);
             graphics.Clear ();
             
             // Render UI Toolkit

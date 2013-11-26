@@ -349,6 +349,7 @@ namespace VitaDefiler.PSM
         private VitaConnection conn;
         private string name;
         private string package;
+        private PsmDeviceConsoleCallback callback;
 
         public Vita(string portstr, string name, string package)
         {
@@ -412,7 +413,7 @@ namespace VitaDefiler.PSM
                 throw new IOException("Cannot connect to Vita.");
             }
             this.handle = devId;
-            PsmDeviceConsoleCallback callback = new PsmDeviceConsoleCallback(consoleCallback);
+            callback = new PsmDeviceConsoleCallback(consoleCallback);
             Console.WriteLine("Setting console callback.");
             PSMFunctions.SetConsoleWrite(this.handle, Marshal.GetFunctionPointerForDelegate(callback));
 
@@ -459,12 +460,14 @@ namespace VitaDefiler.PSM
             Console.WriteLine("Stopping debugger.");
             conn.Close();
             conn = null;
+#if CLEAN_EXIT
             Console.WriteLine("Killing running app.");
             PSMFunctions.Kill(this.handle);
             Console.WriteLine("Uninstalling app.");
             PSMFunctions.Uninstall(this.handle, name);
             Console.WriteLine("Disconnecting Vita.");
             PSMFunctions.Disconnect(this.handle);
+#endif
         }
 
         public void Suspend()

@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Threading;
@@ -49,11 +50,13 @@ namespace VitaDefilerClient
 			listener = new TcpListener(IPAddress.Any, LISTEN_PORT);
 			listener.Start();
 			Console.WriteLine("XXVCMDXX:IP:{0}:{1}", ipaddr, LISTEN_PORT);
+			AppMain.LogLine("Started listening at {0}:{1}", ipaddr, LISTEN_PORT);
 		}
 		
 		[SecuritySafeCritical]
 		public static void StartListener()
 		{
+			AppMain.LogLine("Privilege escalation successful!");
 			Thread thread = new Thread(Listen);
 			thread.Start();
 		}
@@ -62,7 +65,9 @@ namespace VitaDefilerClient
 		public static void Listen()
 		{
 			Socket sock = listener.AcceptSocket();
-			Console.WriteLine("Connection established!");
+			IPEndPoint remote = sock.RemoteEndPoint as IPEndPoint ?? new IPEndPoint(IPAddress.Any, 0);
+			AppMain.LogLine("Connection established with client {0}:{1}", remote.Address, remote.Port);
+			AppMain.LogLine("Ready for commands.");
 			while (true)
 			{
 				HandleCommands (sock);
@@ -72,8 +77,6 @@ namespace VitaDefilerClient
 		[SecurityCritical]
 		public static void HandleCommands (Socket sock)
 		{
-			//Console.WriteLine("Test 0x{0:X}", System.Runtime.InteropServices.Marshal.AllocHGlobal(0x100));
-			// get header
 			byte[] header = new byte[8];
 			int read = 0;
 			int size = 8;
@@ -84,9 +87,7 @@ namespace VitaDefilerClient
 			// get data
 			Command cmd = (Command)BitConverter.ToInt32(header, 0);
 			int len = BitConverter.ToInt32(header, 4);
-#if DEBUG
-			Console.WriteLine("Recieved command {0}, length 0x{1:X}", cmd, len);
-#endif
+			AppMain.LogLine("Recieved command {0}, length 0x{1:X}", cmd, len);
 			byte[] data = new byte[len];
 			int recv = 0;
 			while (recv < len)
@@ -99,14 +100,14 @@ namespace VitaDefilerClient
 			ProcessCommand (cmd, data, out resp_cmd, out resp);
             // create and send packet
 #if DEBUG
-			Console.WriteLine("Sending response {0}, length 0x{1:X}", resp_cmd, resp.Length);
+			AppMain.LogLine("Sending response {0}, length 0x{1:X}", resp_cmd, resp.Length);
 #endif
             byte[] packet = new byte[resp.Length + 8];
             Array.Copy(BitConverter.GetBytes((int)resp_cmd), 0, packet, 0, sizeof(int));
             Array.Copy(BitConverter.GetBytes(resp.Length), 0, packet, sizeof(int), sizeof(int));
             Array.Copy(resp, 0, packet, 8, resp.Length);
 #if DEBUG
-			Console.WriteLine("Response: {0}", BitConverter.ToString(packet));
+			AppMain.LogLine("Response: {0}", BitConverter.ToString(packet));
 #endif
             sock.Send(packet);
 		}
@@ -125,27 +126,31 @@ namespace VitaDefilerClient
 						int len = BitConverter.ToInt32(data, 0);
 						IntPtr ret = NativeFunctions.AllocData(len);
 						resp = BitConverter.GetBytes(ret.ToInt32());
+						AppMain.LogLine("Allocated {0} bytes at 0x{1:x}", len, ret.ToInt32());
 						break;
 					}
 					case Command.AllocateCode:
 					{
-						int len = BitConverter.ToInt32(data, 0);
 						IntPtr lenp = NativeFunctions.AllocData(4);
-						NativeFunctions.Write(lenp, BitConverter.GetBytes(len), 4);
-						int ret = NativeFunctions.Execute(PSS_CODE_MEM_ALLOC, lenp.ToInt32(), 0, 0, 0);
+						NativeFunctions.Write(lenp, data, 0, 4);
+						int ret = NativeFunctions.Execute(PSS_CODE_MEM_ALLOC, lenp.ToInt32());
 						resp = BitConverter.GetBytes(ret);
 						NativeFunctions.FreeData(lenp);
+						AppMain.LogLine("Allocated code at 0x{0:x}", ret);
 						break;
 					}
 					case Command.FreeData:
 					{
-						NativeFunctions.FreeData(new IntPtr(BitConverter.ToInt32(data, 0)));
+						IntPtr ptr = new IntPtr(BitConverter.ToInt32(data, 0));
+						NativeFunctions.FreeData(ptr);
+						AppMain.LogLine("Freed data 0x{0:x}", ptr.ToInt32());
 						break;
 					}
 					case Command.FreeCode:
 					{
 						int addr = BitConverter.ToInt32(data, 0);
-						NativeFunctions.Execute(PSS_CODE_MEM_FREE, addr, 0, 0, 0);
+						NativeFunctions.Execute(PSS_CODE_MEM_FREE, addr);
+						AppMain.LogLine("Freed code 0x{0:x}", addr);
 						break;
 					}
 					case Command.WriteCode:
@@ -153,15 +158,17 @@ namespace VitaDefilerClient
 					{
 						if (cmd == Command.WriteCode)
 						{
-							NativeFunctions.Execute(PSS_CODE_MEM_UNLOCK, 0, 0, 0, 0);
+							NativeFunctions.Execute(PSS_CODE_MEM_UNLOCK);
 						}
 						IntPtr addr = new IntPtr(BitConverter.ToInt32(data, 0));
-						NativeFunctions.Write(addr, data, sizeof(int));
-						resp = BitConverter.GetBytes(data.Length);
+						int size = BitConverter.ToInt32(data, sizeof(int));
+						NativeFunctions.Write(addr, data, 2 * sizeof(int), size);
+						resp = BitConverter.GetBytes(size);
 						if (cmd == Command.WriteCode)
 						{
-							NativeFunctions.Execute(PSS_CODE_MEM_LOCK, 0, 0, 0, 0);
+							NativeFunctions.Execute(PSS_CODE_MEM_LOCK);
 						}
+						AppMain.LogLine("Wrote {0} bytes at 0x{1:x}", size, addr.ToInt32());
 						break;
 					}
 					case Command.ReadData:
@@ -169,28 +176,47 @@ namespace VitaDefilerClient
 						IntPtr addr = new IntPtr(BitConverter.ToInt32(data, 0));
 						int size = BitConverter.ToInt32(data, sizeof(int));
 						resp = new byte[size];
-						NativeFunctions.Read(addr, resp, 0);
+						NativeFunctions.Read(addr, resp, 0, size);
+						AppMain.LogLine("Read {0} bytes at 0x{1:x}", size, addr.ToInt32());
 						break;	
 					}
 					case Command.Execute:
 					{
-						int[] args = new int[5];
-						for (int i = 0; i < data.Length / sizeof(int); i++)
+						int argc = data.Length / sizeof(int);
+						object[] args = new object[argc];
+						for (int i = 0; i < argc; i++)
 						{
 							args[i] = BitConverter.ToInt32(data, i * sizeof(int));
 						}
-						int ret = NativeFunctions.Execute(new IntPtr(args[0]), args[1], args[2], args[3], args[4]);
+						args[0] = new IntPtr((int)args[0]);
+						AppMain.LogLine("Executing 0x{0:x} with {1} args", ((IntPtr)args[0]).ToInt32(), argc-1);
+						MethodInfo[] allexecute = typeof(NativeFunctions).GetMethods();
+						MethodInfo execute = null;
+						foreach (MethodInfo e in allexecute)
+						{
+							if (e.Name == "Execute" && e.GetParameters().Length == argc)
+							{
+								execute = e;
+								break;
+							}
+						}
+						if (execute == null)
+						{
+							throw new ArgumentException("Invalid number of paramaters");
+						}
+						int ret = (int)execute.Invoke(null, args);
 						resp = BitConverter.GetBytes(ret);
+						AppMain.LogLine("Code returned: 0x{0:x}", ret);
 						break;
 					}
 					case Command.Echo:
 					{
-						Console.WriteLine(Encoding.ASCII.GetString(data));
+						AppMain.LogLine(Encoding.ASCII.GetString(data));
 						break;
 					}
 					default:
 					{
-						Console.WriteLine("Unrecognized command: {0}", cmd);
+						AppMain.LogLine("Unrecognized command: {0}", cmd);
 						break;
 					}
 				}
@@ -199,7 +225,7 @@ namespace VitaDefilerClient
 			{
 				resp_cmd = Command.Error;
 				resp = Encoding.ASCII.GetBytes(ex.Message);
-				Console.WriteLine("Error running command {0}: {1}", cmd, ex.Message);
+				AppMain.LogLine("Error running command {0}: {1}", cmd, ex.Message);
 			}
 		}
 	}

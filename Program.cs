@@ -13,7 +13,9 @@ namespace VitaDefiler
 
         static void ConsoleCallback(string text)
         {
+#if DEBUG
             Console.WriteLine("[Vita] {0}", text);
+#endif
         }
 
         static void Main(string[] args)
@@ -80,8 +82,12 @@ namespace VitaDefiler
 
             // exploit vita
             usb.EscalatePrivilege();
-            usb.StartNetworkListener();
-            Console.Error.WriteLine("Vita exploited.");
+            //Thread tt = new Thread(() =>
+            //{
+                usb.StartNetworkListener();
+                Console.Error.WriteLine("Vita exploited.");
+            //});
+            //tt.Start();
 
             // set up network
             Network net = new Network();
