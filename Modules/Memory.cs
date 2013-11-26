@@ -63,7 +63,7 @@ namespace VitaDefiler.Modules
             }
             try
             {
-                FileStream fout = file != null ? File.Open(file, FileMode.Truncate) : null;
+                FileStream fout = file != null ? File.Open(file, FileMode.Create) : null;
                 byte[] data = new byte[BLOCK_SIZE];
                 for (uint l = 0; l < length; l += BLOCK_SIZE)
                 {
