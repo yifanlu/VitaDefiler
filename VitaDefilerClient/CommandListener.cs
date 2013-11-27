@@ -133,7 +133,7 @@ namespace VitaDefilerClient
 					{
 						IntPtr lenp = NativeFunctions.AllocData(4);
 						NativeFunctions.Write(lenp, data, 0, 4);
-						int ret = NativeFunctions.Execute(PSS_CODE_MEM_ALLOC, lenp.ToInt32());
+						int ret = NativeFunctions.Execute(PSS_CODE_MEM_ALLOC, lenp.ToInt32(), 0, 0, 0);
 						resp = BitConverter.GetBytes(ret);
 						NativeFunctions.FreeData(lenp);
 						AppMain.LogLine("Allocated code at 0x{0:x}", ret);
@@ -149,7 +149,7 @@ namespace VitaDefilerClient
 					case Command.FreeCode:
 					{
 						int addr = BitConverter.ToInt32(data, 0);
-						NativeFunctions.Execute(PSS_CODE_MEM_FREE, addr);
+						NativeFunctions.Execute(PSS_CODE_MEM_FREE, addr, 0, 0, 0);
 						AppMain.LogLine("Freed code 0x{0:x}", addr);
 						break;
 					}
@@ -158,7 +158,7 @@ namespace VitaDefilerClient
 					{
 						if (cmd == Command.WriteCode)
 						{
-							NativeFunctions.Execute(PSS_CODE_MEM_UNLOCK);
+							NativeFunctions.Execute(PSS_CODE_MEM_UNLOCK, 0, 0, 0, 0);
 						}
 						IntPtr addr = new IntPtr(BitConverter.ToInt32(data, 0));
 						int size = BitConverter.ToInt32(data, sizeof(int));
@@ -166,7 +166,7 @@ namespace VitaDefilerClient
 						resp = BitConverter.GetBytes(size);
 						if (cmd == Command.WriteCode)
 						{
-							NativeFunctions.Execute(PSS_CODE_MEM_LOCK);
+							NativeFunctions.Execute(PSS_CODE_MEM_LOCK, 0, 0, 0, 0);
 						}
 						AppMain.LogLine("Wrote {0} bytes at 0x{1:x}", size, addr.ToInt32());
 						break;
@@ -183,28 +183,13 @@ namespace VitaDefilerClient
 					case Command.Execute:
 					{
 						int argc = data.Length / sizeof(int);
-						object[] args = new object[argc];
+						int[] args = new int[5];
 						for (int i = 0; i < argc; i++)
 						{
 							args[i] = BitConverter.ToInt32(data, i * sizeof(int));
 						}
-						args[0] = new IntPtr((int)args[0]);
-						AppMain.LogLine("Executing 0x{0:x} with {1} args", ((IntPtr)args[0]).ToInt32(), argc-1);
-						MethodInfo[] allexecute = typeof(NativeFunctions).GetMethods();
-						MethodInfo execute = null;
-						foreach (MethodInfo e in allexecute)
-						{
-							if (e.Name == "Execute" && e.GetParameters().Length == argc)
-							{
-								execute = e;
-								break;
-							}
-						}
-						if (execute == null)
-						{
-							throw new ArgumentException("Invalid number of paramaters");
-						}
-						int ret = (int)execute.Invoke(null, args);
+						AppMain.LogLine("Executing 0x{0:x} with {1} args", args[0], argc-1);
+						int ret = (int)NativeFunctions.Execute(new IntPtr(args[0]), args[1], args[2], args[3], args[4]);
 						resp = BitConverter.GetBytes(ret);
 						AppMain.LogLine("Code returned: 0x{0:x}", ret);
 						break;

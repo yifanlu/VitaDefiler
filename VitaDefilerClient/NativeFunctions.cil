@@ -106,62 +106,12 @@
         .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
 
         // Method begins at RVA 0x2084
-        ldarg 4
-        ldarg.3
-        ldarg.2
         ldarg.1
+        ldarg.2
+        ldarg.3
+        ldarg 4
         ldarg.0
         calli int32 (native int, native int, native int, native int)
-        ret
-    } // end of method NativeFunctions::Execute
-
-    .method public static hidebysig 
-           default int32 Execute (native int addr, int32 arg0, int32 arg1, int32 arg2)  cil managed 
-    {
-        .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
-
-        // Method begins at RVA 0x2084
-        ldarg.3
-        ldarg.2
-        ldarg.1
-        ldarg.0
-        calli int32 (native int, native int, native int)
-        ret
-    } // end of method NativeFunctions::Execute
-
-    .method public static hidebysig 
-           default int32 Execute (native int addr, int32 arg0, int32 arg1)  cil managed 
-    {
-        .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
-
-        // Method begins at RVA 0x2084
-        ldarg.2
-        ldarg.1
-        ldarg.0
-        calli int32 (native int, native int)
-        ret
-    } // end of method NativeFunctions::Execute
-
-    .method public static hidebysig 
-           default int32 Execute (native int addr, int32 arg0)  cil managed 
-    {
-        .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
-
-        // Method begins at RVA 0x2084
-        ldarg.1
-        ldarg.0
-        calli int32 (native int)
-        ret
-    } // end of method NativeFunctions::Execute
-
-    .method public static hidebysig 
-           default int32 Execute (native int addr)  cil managed 
-    {
-        .custom instance void class [mscorlib]System.Security.SecurityCriticalAttribute::'.ctor'() =  (01 00 00 00 ) // ....
-
-        // Method begins at RVA 0x2084
-        ldarg.0
-        calli int32 ()
         ret
     } // end of method NativeFunctions::Execute
 

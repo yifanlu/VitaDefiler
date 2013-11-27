@@ -1330,7 +1330,7 @@ namespace VitaDefiler.PSM
         }
 
         // Do the wire protocol handshake
-        internal void Connect()
+        internal void Connect(out Thread reciever)
         {
             byte[] buf = new byte[HANDSHAKE_STRING.Length];
             char[] cbuf = new char[buf.Length];
@@ -1348,6 +1348,7 @@ namespace VitaDefiler.PSM
             TransportSend(buf, 0, buf.Length);
 
             receiver_thread = new Thread(new ThreadStart(receiver_thread_main));
+            reciever = receiver_thread;
             receiver_thread.Start();
 
             Version = VM_GetVersion();

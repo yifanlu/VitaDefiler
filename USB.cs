@@ -8,6 +8,7 @@ using Mono.Debugger.Soft;
 using System.Runtime.InteropServices;
 using System.Threading;
 using VitaDefiler.PSM;
+using System.Security.Permissions;
 
 namespace VitaDefiler
 {
@@ -350,6 +351,7 @@ namespace VitaDefiler.PSM
         private string name;
         private string package;
         private PsmDeviceConsoleCallback callback;
+        private Thread reciever;
 
         public Vita(string portstr, string name, string package)
         {
@@ -435,7 +437,7 @@ namespace VitaDefiler.PSM
             conn = new VitaConnection(port);
             conn.EventHandler = new ConnEventHandler();
             conn.ErrorHandler += HandleConnErrorHandler;
-            conn.Connect();
+            conn.Connect(out reciever);
 
             Console.WriteLine("Waiting for app to start up...");
             conn.VM_Resume();
@@ -455,17 +457,24 @@ namespace VitaDefiler.PSM
             Console.WriteLine("Ready for hacking.");
         }
 
+        [SecurityPermissionAttribute(SecurityAction.Demand, ControlThread = true)]
         public void Stop()
         {
             Console.WriteLine("Stopping debugger.");
+            if (reciever != null)
+            {
+                reciever.Abort();
+            }
             conn.Close();
             conn = null;
+#if CLEAN_EXIT
             Console.WriteLine("Killing running app.");
             PSMFunctions.Kill(this.handle);
             Console.WriteLine("Uninstalling app.");
             PSMFunctions.Uninstall(this.handle, name);
             Console.WriteLine("Disconnecting Vita.");
             PSMFunctions.Disconnect(this.handle);
+#endif
         }
 
         public void Suspend()
