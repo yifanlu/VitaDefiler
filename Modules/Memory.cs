@@ -31,7 +31,14 @@ namespace VitaDefiler.Modules
                 case "write":
                     if (args.Length >= 3)
                     {
-                        Write(dev, args[0].ToVariable(dev).Data, args[1].ToDataSize(), args[0].ToVariable(dev).IsCode, args[2].ToInteger(), args[2]);
+                        Variable var = args[0].ToVariable(dev);
+                        Write(dev, var.Data, args[1].ToDataSize(), var.IsCode, args[2].ToInteger(), args[2]);
+                        return true;
+                    }
+                    else if (args.Length == 2)
+                    {
+                        Variable var = args[0].ToVariable(dev);
+                        Write(dev, var.Data, var.Size == 0 ? sizeof(int) : var.Size, var.IsCode, args[1].ToInteger(), args[1]);
                         return true;
                     }
                     break;

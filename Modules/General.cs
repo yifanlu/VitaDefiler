@@ -18,8 +18,11 @@ free addr                       Frees memory allocated at addr.
 usbread addr length [file]      Uses USB to dump address. Optional file to 
                                 capture output to. Optional length to read.
 read addr [length] [file]       Uses network to dump address. Optional file 
-                                to capture output to. Optional length to read.
-write addr length (file|int)    Writes binary data or an integer to addr.
+                                to capture output to. If no length is 
+                                specified, it will be size of variable.
+write addr [length] (file|int)  Writes binary data or an integer to addr.
+                                If no length is specified, length will be 
+                                file size or variable size.
 vars                            Print list of variables
 
 Paramaters:
