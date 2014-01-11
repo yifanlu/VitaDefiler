@@ -80,6 +80,7 @@ namespace VitaDefiler
             Console.Error.WriteLine("Waiting for app to finish launching...");
             doneinit.WaitOne();
 
+#if !NO_ESCALATE_PRIVILEGES
             // exploit vita
             usb.EscalatePrivilege();
             //Thread tt = new Thread(() =>
@@ -87,7 +88,9 @@ namespace VitaDefiler
                 usb.StartNetworkListener();
                 Console.Error.WriteLine("Vita exploited.");
             //});
-            //tt.Start();
+                //tt.Start();
+#endif
+            usb.DefeatASLR();
 
             // set up network
             Network net = new Network();

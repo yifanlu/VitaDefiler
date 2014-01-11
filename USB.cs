@@ -239,6 +239,13 @@ namespace VitaDefiler
             long methid_exploit = _vita.GetMethod(false, "VitaDefilerClient.CommandListener", "StartListener", 0, null);
             _vita.RunMethod(methid_exploit, null, null);
         }
+
+        public void DefeatASLR()
+        {
+            long methid_getstdout = _vita.GetMethod(true, "System.IO.MonoIO", "get_ConsoleOutput", 0, null);
+            ValueImpl stdout = _vita.RunMethod(methid_getstdout, null, null);
+            Console.WriteLine(VitaIntToUInt((Int64)stdout.Fields[0].Value));
+        }
     }
 }
 
@@ -419,15 +426,17 @@ namespace VitaDefiler.PSM
             Console.WriteLine("Setting console callback.");
             PSMFunctions.SetConsoleWrite(this.handle, Marshal.GetFunctionPointerForDelegate(callback));
 
+#if !NO_INSTALL_PACKAGE
             Console.WriteLine("Installing package {0} as {1}.", package, name);
             if (PSMFunctions.Install(this.handle, package, name) != 0)
             {
                 Console.WriteLine("Error installing package.");
                 throw new IOException("Cannot connect to Vita.");
             }
+#endif
 
             Console.WriteLine("Launching {0}.", name);
-            if (PSMFunctions.Launch(this.handle, name, true, false, false, "") != 0)
+            if (PSMFunctions.Launch(this.handle, name, true, false, false, false, "") != 0)
             {
                 Console.WriteLine("Error running application.");
                 throw new IOException("Cannot connect to Vita.");

@@ -90,7 +90,7 @@ namespace VitaDefiler.PSM
         [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevKill")]
         public static extern int Kill([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
         [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevLaunch")]
-        public static extern int Launch([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId, bool debug, bool profile, bool keepnet, [MarshalAs(UnmanagedType.LPStr)] string arg);
+        public static extern int Launch([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId, bool debug, bool profile, bool keepnet, bool logwaiting, [MarshalAs(UnmanagedType.LPStr)] string arg);
         [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevListApplications")]
         public static extern int ListApplications([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0, SizeConst = 100)] ScePsmApplication[] appArray);
         [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevListDevices")]
