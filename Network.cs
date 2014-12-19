@@ -18,7 +18,9 @@ namespace VitaDefiler
         WriteCode = 6,
         ReadData = 7,
         Execute = 8,
-        Echo = 9
+        Echo = 9,
+        SetFuncPtrs = 10,
+        Exit = 11
     }
 
     class Network
@@ -68,7 +70,7 @@ namespace VitaDefiler
             return RunCommand(cmd, BitConverter.GetBytes(data));
         }
 
-        public Command RunCommand(Command cmd, int[] data, out byte[] resp)
+        public Command RunCommand(Command cmd, uint[] data, out byte[] resp)
         {
             byte[] bdata = new byte[data.Length * sizeof(int)];
             for (int i = 0; i < data.Length; i++)

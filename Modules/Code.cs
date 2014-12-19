@@ -26,11 +26,11 @@ namespace VitaDefiler.Modules
                 case "exec":
                     if (args.Length >= 1)
                     {
-                        int[] callargs = new int[args.Length];
+                        uint[] callargs = new uint[args.Length];
                         for (int i = 0; i < args.Length; i++)
                         {
                             Variable v = args[i].ToVariable(dev);
-                            callargs[i] = (int)v.Data;
+                            callargs[i] = v.Data;
                         }
                         Execute(dev, callargs);
                         return true;
@@ -77,7 +77,7 @@ namespace VitaDefiler.Modules
             }
         }
 
-        public void Execute(Device dev, int[] args)
+        public void Execute(Device dev, uint[] args)
         {
             byte[] resp;
             if (dev.Network.RunCommand(Command.Execute, args, out resp) != Command.Error)

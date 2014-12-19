@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Text;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Mono.Cecil.Metadata;
@@ -50,6 +51,12 @@ namespace VitaDefiler.PSM
         VersionTarget = -2147418099
     }
 
+    public enum ScePsmDrmKpubUploadState
+    {
+        NEW_REGIST,
+        OVERWRITE
+    }
+
     [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Ansi, BestFitMapping = false)]
     public delegate void PsmDeviceConsoleCallback(string message);
 
@@ -65,6 +72,28 @@ namespace VitaDefiler.PSM
         public static extern int ReadFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead);
         [DllImport("host_transport64.dll", EntryPoint = "scePsmHTWriteFile", SetLastError = true)]
         public static extern int WriteFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten);
+
+        public static string GetVitaPortWithSerial(string serial)
+        {
+            ManagementClass class2 = new ManagementClass("Win32_SerialPort");
+            string vitaDebugPnpDeviceID = @"USB\VID_054C&PID_069B\" + serial;
+            foreach (ManagementBaseObject obj2 in class2.GetInstances())
+            {
+                if ((obj2.GetPropertyValue("PNPDeviceID") as string).IndexOf(vitaDebugPnpDeviceID, StringComparison.OrdinalIgnoreCase) != -1)
+                {
+                    string str2 = obj2.GetPropertyValue("Caption").ToString();
+                    if ((str2 != null) && str2.Contains("PSM USB Debug"))
+                    {
+                        string str3 = obj2.GetPropertyValue("DeviceID").ToString();
+                        if (!string.IsNullOrEmpty(str3))
+                        {
+                            return str3;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
     }
 
     public class PSMFunctions
@@ -105,6 +134,41 @@ namespace VitaDefiler.PSM
         public static extern int SetConsoleWrite([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, IntPtr proc);
         [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevUninstall")]
         public static extern int Uninstall([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId);
+        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevVersion")]
+        public static extern int Version([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+    }
+
+    public class DRMFunctions
+    {
+        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGenerateKpub", CharSet = CharSet.Ansi)]
+        public static extern int scePsmDrmGenerateKpub(string signInID, string password, string commonName, ScePsmDrmKpubUploadState uploadState, out IntPtr devPkcs12, out int devPkcs12Size, IntPtr certCommonName, IntPtr certCreateTime);
+        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGenerateKpubInit", CharSet = CharSet.Ansi)]
+        public static extern int scePsmDrmGenerateKpubInit(string pu_ver, string env, string proxyServer, int proxyPort);
+        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGenerateKpubTerm", CharSet = CharSet.Ansi)]
+        public static extern int scePsmDrmGenerateKpubTerm();
+        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGenerateQaKpub", CharSet = CharSet.Ansi)]
+        public static extern int scePsmDrmGenerateQaKpub(string signInID, string password, string commonName, ScePsmDrmKpubUploadState uploadState, out IntPtr devPkcs12, out int devPkcs12Size, IntPtr certCommonName, IntPtr certCreateTime);
+        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGetAccountId", CharSet = CharSet.Ansi)]
+        public static extern int scePsmDrmGetAccountId(IntPtr devPkcs12, int devPkcs12Size, IntPtr accountId);
+        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGetCertInfo", CharSet = CharSet.Ansi)]
+        public static extern int scePsmDrmGetCertInfo(IntPtr devPkcs12, int devPkcs12Size, IntPtr certCommonName, IntPtr certCreateTime);
+        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmReleaseDevPkcs12", CharSet = CharSet.Ansi)]
+        public static extern int scePsmDrmReleaseDevPkcs12(IntPtr devPkcs12);
+
+        public static long ReadAccountIdFromKdevP12(byte[] bsKdev12)
+        {
+            long[] destination = new long[1];
+            IntPtr ptr = Marshal.AllocHGlobal(bsKdev12.Length);
+            IntPtr accountId = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(long)));
+            Marshal.Copy(bsKdev12, 0, ptr, bsKdev12.Length);
+            scePsmDrmGenerateKpubInit("1.21.5317.31657 - 2014/07/23 03:35:16", "np", null, 0);
+            scePsmDrmGetAccountId(ptr, bsKdev12.Length, accountId);
+            scePsmDrmGenerateKpubTerm();
+            Marshal.Copy(accountId, destination, 0, 1);
+            Marshal.FreeHGlobal(ptr);
+            Marshal.FreeHGlobal(accountId);
+            return destination[0];
+        }
     }
 
     public class DataConverter

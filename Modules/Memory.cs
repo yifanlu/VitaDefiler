@@ -76,7 +76,7 @@ namespace VitaDefiler.Modules
                 {
                     uint size = l + BLOCK_SIZE > length ? length % BLOCK_SIZE : BLOCK_SIZE;
                     Console.Error.WriteLine("Dumping 0x{0:X}", addr + l);
-                    if (dev.Network.RunCommand(Command.ReadData, new int[]{(int)(addr+l), (int)size}, out data) == Command.Error)
+                    if (dev.Network.RunCommand(Command.ReadData, new uint[]{addr+l, size}, out data) == Command.Error)
                     {
                         Console.WriteLine("Read failed.");
                         break;
@@ -126,7 +126,7 @@ namespace VitaDefiler.Modules
             byte[] resp;
             if (file == null || !File.Exists(file))
             {
-                if (dev.Network.RunCommand(isCode ? Command.WriteCode : Command.WriteData, new int[] { (int)addr, (int)length, (int)data }, out resp) == Command.Error)
+                if (dev.Network.RunCommand(isCode ? Command.WriteCode : Command.WriteData, new uint[] { addr, length, data }, out resp) == Command.Error)
                 {
                     Console.Error.WriteLine("Write failed.");
                 }

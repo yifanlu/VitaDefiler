@@ -19,17 +19,20 @@ namespace VitaDefilerClient
         WriteCode = 6,
         ReadData = 7,
         Execute = 8,
-        Echo = 9
+        Echo = 9,
+		SetFuncPtrs = 10,
+		Exit = 11
     }
 	
 	public class CommandListener
 	{
 		private const int LISTEN_PORT = 4445;
-		private static readonly IntPtr PSS_CODE_MEM_ALLOC = new IntPtr(0x814275A1);
-		private static readonly IntPtr PSS_CODE_MEM_FREE = new IntPtr(0x8142767F);
-		private static readonly IntPtr PSS_CODE_MEM_UNLOCK = new IntPtr(0x81427575);
-		private static readonly IntPtr PSS_CODE_MEM_LOCK = new IntPtr(0x8142754D);
+		private static IntPtr pss_code_mem_alloc = IntPtr.Zero;
+		private static IntPtr pss_code_mem_free = IntPtr.Zero;
+		private static IntPtr pss_code_mem_unlock = IntPtr.Zero;
+		private static IntPtr pss_code_mem_lock = IntPtr.Zero;
 		private static TcpListener listener;
+		private static bool alive = true;
 		
 		public CommandListener ()
 		{
@@ -68,10 +71,11 @@ namespace VitaDefilerClient
 			IPEndPoint remote = sock.RemoteEndPoint as IPEndPoint ?? new IPEndPoint(IPAddress.Any, 0);
 			AppMain.LogLine("Connection established with client {0}:{1}", remote.Address, remote.Port);
 			AppMain.LogLine("Ready for commands.");
-			while (true)
+			while (alive)
 			{
 				HandleCommands (sock);
 			}
+			Environment.Exit(0);
 		}
 		
 		[SecurityCritical]
@@ -133,7 +137,7 @@ namespace VitaDefilerClient
 					{
 						IntPtr lenp = NativeFunctions.AllocData(4);
 						NativeFunctions.Write(lenp, data, 0, 4);
-						int ret = NativeFunctions.Execute(PSS_CODE_MEM_ALLOC, lenp.ToInt32(), 0, 0, 0);
+						int ret = NativeFunctions.Execute(pss_code_mem_alloc, lenp.ToInt32(), 0, 0, 0);
 						resp = BitConverter.GetBytes(ret);
 						NativeFunctions.FreeData(lenp);
 						AppMain.LogLine("Allocated code at 0x{0:x}", ret);
@@ -149,7 +153,7 @@ namespace VitaDefilerClient
 					case Command.FreeCode:
 					{
 						int addr = BitConverter.ToInt32(data, 0);
-						NativeFunctions.Execute(PSS_CODE_MEM_FREE, addr, 0, 0, 0);
+						NativeFunctions.Execute(pss_code_mem_free, addr, 0, 0, 0);
 						AppMain.LogLine("Freed code 0x{0:x}", addr);
 						break;
 					}
@@ -158,7 +162,7 @@ namespace VitaDefilerClient
 					{
 						if (cmd == Command.WriteCode)
 						{
-							NativeFunctions.Execute(PSS_CODE_MEM_UNLOCK, 0, 0, 0, 0);
+							NativeFunctions.Execute(pss_code_mem_unlock, 0, 0, 0, 0);
 						}
 						IntPtr addr = new IntPtr(BitConverter.ToInt32(data, 0));
 						int size = BitConverter.ToInt32(data, sizeof(int));
@@ -166,7 +170,7 @@ namespace VitaDefilerClient
 						resp = BitConverter.GetBytes(size);
 						if (cmd == Command.WriteCode)
 						{
-							NativeFunctions.Execute(PSS_CODE_MEM_LOCK, 0, 0, 0, 0);
+							NativeFunctions.Execute(pss_code_mem_lock, 0, 0, 0, 0);
 						}
 						AppMain.LogLine("Wrote {0} bytes at 0x{1:x}", size, addr.ToInt32());
 						break;
@@ -197,6 +201,25 @@ namespace VitaDefilerClient
 					case Command.Echo:
 					{
 						AppMain.LogLine(Encoding.ASCII.GetString(data));
+						break;
+					}
+					case Command.SetFuncPtrs:
+					{
+						pss_code_mem_alloc = new IntPtr(BitConverter.ToInt32(data, 0));
+						pss_code_mem_free = new IntPtr(BitConverter.ToInt32(data, 4));
+						pss_code_mem_unlock = new IntPtr(BitConverter.ToInt32(data, 8));
+						pss_code_mem_lock = new IntPtr(BitConverter.ToInt32(data, 12));
+						AppMain.LogLine("Functions found:");
+						AppMain.LogLine("pss_code_mem_alloc: 0x{0:x}", pss_code_mem_alloc.ToInt32());
+						AppMain.LogLine("pss_code_mem_free: 0x{0:x}", pss_code_mem_free.ToInt32());
+						AppMain.LogLine("pss_code_mem_unlock: 0x{0:x}", pss_code_mem_unlock.ToInt32());
+						AppMain.LogLine("pss_code_mem_lock: 0x{0:x}", pss_code_mem_lock.ToInt32());
+						break;
+					}
+					case Command.Exit:
+					{
+						alive = false;
+						resp = BitConverter.GetBytes(0);
 						break;
 					}
 					default:

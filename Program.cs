@@ -20,16 +20,23 @@ namespace VitaDefiler
 
         static void Main(string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length < 1)
             {
-                Console.Error.WriteLine("usage: VitaDefiler.exe port package\n    port is serial port, ex: COM5\n    package is path to PSM package");
+                Console.Error.WriteLine("usage: VitaDefiler.exe package\n    package is path to PSM package");
                 return;
             }
-            if (!File.Exists(args[1]))
+            if (!File.Exists(args[0]))
             {
                 Console.Error.WriteLine("cannot find package file");
                 return;
             }
+#if USE_APP_KEY
+            if (!File.Exists(args[1]))
+            {
+                Console.Error.WriteLine("cannot find key file");
+                return;
+            }
+#endif
 
             // kill PSM
             Process[] potential = Process.GetProcessesByName("PsmDevice");
@@ -50,7 +57,7 @@ namespace VitaDefiler
             }
 
             // set up usb
-            USB usb = new USB(args[0], args[1]);
+            USB usb = new USB(args[0], null);
             ManualResetEvent doneinit = new ManualResetEvent(false);
             string host = string.Empty;
             int port = 0;
@@ -80,9 +87,14 @@ namespace VitaDefiler
             Console.Error.WriteLine("Waiting for app to finish launching...");
             doneinit.WaitOne();
 
+            uint images_hash_ptr;
+            uint[] funcs = new uint[4];
+            Console.Error.WriteLine("Defeating ASLR...");
+            usb.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3]);
 #if !NO_ESCALATE_PRIVILEGES
             // exploit vita
-            usb.EscalatePrivilege();
+            Console.Error.WriteLine("Escalating privileges...");
+            usb.EscalatePrivilege(images_hash_ptr);
             //Thread tt = new Thread(() =>
             //{
                 usb.StartNetworkListener();
@@ -90,7 +102,6 @@ namespace VitaDefiler
             //});
                 //tt.Start();
 #endif
-            usb.DefeatASLR();
 
             // set up network
             Network net = new Network();
@@ -105,6 +116,13 @@ namespace VitaDefiler
                 return;
             }
 
+            // pass in function pointers
+            byte[] resp;
+            if (net.RunCommand(Command.SetFuncPtrs, funcs, out resp) == Command.Error)
+            {
+                Console.Error.WriteLine("ERROR setting function pointers!");
+            }
+
             // wait for commands
             Console.Error.WriteLine("Ready for commands. Type 'help' for a listing.");
             Device dev = new Device(usb, net);
@@ -114,6 +132,7 @@ namespace VitaDefiler
                 string line = Console.ReadLine();
                 if (line == "exit")
                 {
+                    net.RunCommand(Command.Exit);
                     break;
                 }
                 if (String.IsNullOrEmpty(line))

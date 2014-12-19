@@ -159,5 +159,121 @@ namespace VitaDefiler
                 Console.WriteLine();
             }
         }
+
+        private static bool BitSet(uint i, int b)
+        {
+            return (i & ((uint)0x1 << b)) != 0;
+        }
+
+        public enum DecodeResult
+        {
+            INSTRUCTION_UNKNOWN,
+            INSTRUCTION_MOVW,
+            INSTRUCTION_MOVT,
+            INSTRUCTION_SYSCALL,
+            INSTRUCTION_BRANCH
+        }
+
+        public static UInt32 DecodeARM32(UInt32 cur_inst, out DecodeResult type)
+        {
+            // if this doesn't change, error
+            type = DecodeResult.INSTRUCTION_UNKNOWN;
+            // Bits 31-28 should be 1110, Always Execute
+            if (!(BitSet(cur_inst, 31) && BitSet(cur_inst, 30) && BitSet(cur_inst, 29) && !BitSet(cur_inst, 28)))
+            {
+                // Unsupported conditional instruction.
+                return 0;
+            }
+            // Bits 27-25 should be 110 for supervisor calls
+            if (BitSet(cur_inst, 27))
+            {
+                // Bit 24 should be set for SWI calls
+                if (BitSet(cur_inst, 26) && BitSet(cur_inst, 25) && BitSet(cur_inst, 24))
+                {
+                    type = DecodeResult.INSTRUCTION_SYSCALL;
+                    // TODO: Return syscall immediate value.
+                    return 1;
+                }
+            }
+            // Bits 27-25 should be 001 for data instructions
+            else if (!BitSet(cur_inst, 26) && BitSet(cur_inst, 25))
+            {
+                // Bits 24-23 should be 10
+                if (!(BitSet(cur_inst, 24) && !BitSet(cur_inst, 23)))
+                {
+                    // Not an valid ARM MOV instruction.
+                    return 0;
+                }
+                // Bits 21-20 should be 00
+                if (!(!BitSet(cur_inst, 21) && !BitSet(cur_inst, 20)))
+                {
+                    // Invalid ARM MOV instruction.
+                    return 0;
+                }
+                // Bit 22 is 1 for top load 0 for bottom load
+                if (BitSet(cur_inst, 22)) // top load
+                {
+                    type = DecodeResult.INSTRUCTION_MOVT;
+                }
+                else
+                {
+                    type = DecodeResult.INSTRUCTION_MOVW;
+                }
+                // Immediate value at 19-16 and 11-0
+                // discard bytes 31-20
+                // discard bytes 15-0
+                return (((cur_inst << 12) >> 28) << 12) | ((cur_inst << 20) >> 20);
+            }
+            // Bits 27-25 should be 000 for jump instructions
+            else if (!BitSet(cur_inst, 26) && !BitSet(cur_inst, 25))
+            {
+                // Bits 24-4 should be 100101111111111110001, 0x12FFF1 for BX
+                if ((cur_inst << 7) >> 11 == 0x12FFF1)
+                {
+                    type = DecodeResult.INSTRUCTION_BRANCH;
+                    return 0;
+                }
+                // Bits 24-4 should be 100101111111111110001, 0x12FFF3 for BLX
+                else if ((cur_inst << 7) >> 11 == 0x12FFF3)
+                {
+                    type = DecodeResult.INSTRUCTION_BRANCH;
+                    return 0;
+                }
+                else
+                {
+                    // unknown jump
+                    return 0;
+                }
+            }
+            else
+            {
+                // Unsupported instruction.
+                return 0;
+            }
+            return 0;
+        }
+
+        public static UInt16 DecodeThumb2(UInt16 inst1, UInt16 inst2, out DecodeResult type)
+        {
+            type = DecodeResult.INSTRUCTION_UNKNOWN;
+            if ((inst1 & 0xF240) == 0xF240 && (~inst1 & 0x930) == 0x930 && !BitSet(inst2, 15))
+            {
+                uint data = 0;
+                if (BitSet(inst1, 7))
+                {
+                    type = DecodeResult.INSTRUCTION_MOVT;
+                }
+                else
+                {
+                    type = DecodeResult.INSTRUCTION_MOVW;
+                }
+                data |= ((uint)inst2 & 0xFF);
+                data |= ((uint)inst2 & 0x7000) >> 12 << 8;
+                data |= ((uint)inst1 & 0x400) >> 10 << 11;
+                data |= ((uint)inst1 & 0xF) << 12;
+                return (UInt16)data;
+            }
+            return 0;
+        }
     }
 }
