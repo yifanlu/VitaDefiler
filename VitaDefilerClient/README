@@ -1,0 +1,13 @@
+This is the client for VitaDefiler.
+
+You need to first build NativeFunctions.cil with the following command (in this directory):
+```
+mkdir lib
+ilasm.exe /output:lib\NativeFunctions.dll /dll NativeFunctions.cil
+```
+
+You can run it from either Visual Studio Command Prompt or with Mono's irasm.exe
+
+Next, open the project in PSM Develop, build it, and make sure it runs on the Vita. 
+Check that there's no errors in loading & deploying and if all is good, you can 
+use VitaDefilerClient.psdp with VitaDefiler.
