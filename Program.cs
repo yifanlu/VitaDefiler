@@ -84,14 +84,20 @@ namespace VitaDefiler
                             break;
                     }
                 }
+                else
+                {
+                    Console.Error.WriteLine("[Vita] {0}", text);
+                }
             });
             Console.Error.WriteLine("Waiting for app to finish launching...");
             doneinit.WaitOne();
 
             uint images_hash_ptr;
-            uint[] funcs = new uint[4];
+            uint[] funcs = new uint[5];
+            uint logline_func;
+            uint libkernel_anchor;
             Console.Error.WriteLine("Defeating ASLR...");
-            usb.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3]);
+            usb.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3], out funcs[4], out libkernel_anchor);
 #if !NO_ESCALATE_PRIVILEGES
             // exploit vita
             Console.Error.WriteLine("Escalating privileges...");
@@ -117,12 +123,36 @@ namespace VitaDefiler
                 return;
             }
 
-            // pass in function pointers
             byte[] resp;
+
+            // enable gui
+            if (enablegui)
+            {
+                Console.Error.WriteLine("Enabling GUI");
+                net.RunCommand(Command.EnableGUI, out resp);
+            }
+
+            // pass in function pointers
             if (net.RunCommand(Command.SetFuncPtrs, funcs, out resp) == Command.Error)
             {
                 Console.Error.WriteLine("ERROR setting function pointers!");
             }
+
+            // set up RPC context
+            Device dev = new Device(usb, net);
+
+            // get logger
+            net.RunCommand(Command.GetLogger, out resp);
+            logline_func = BitConverter.ToUInt32(resp, 0);
+
+            // pass in ASLR bypass as local variables for scripting use
+            dev.CreateLocal("pss_code_mem_alloc", funcs[0]);
+            dev.CreateLocal("pss_code_mem_free", funcs[1]);
+            dev.CreateLocal("pss_code_mem_unlock", funcs[2]);
+            dev.CreateLocal("pss_code_mem_lock", funcs[3]);
+            dev.CreateLocal("pss_code_mem_flush_icache", funcs[4]);
+            dev.CreateLocal("logline", logline_func);
+            dev.CreateLocal("libkernel_anchor", libkernel_anchor);
 
             // wait for commands
             Console.Error.WriteLine("Ready for commands. Type 'help' for a listing.");

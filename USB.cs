@@ -153,7 +153,7 @@ namespace VitaDefiler
             _vita.Resume();
         }
 
-        public uint DefeatASLR(out uint images_hash_ptr, out uint alloc_fptr, out uint free_fptr, out uint unlock_fptr, out uint lock_fptr)
+        public uint DefeatASLR(out uint images_hash_ptr, out uint alloc_fptr, out uint free_fptr, out uint unlock_fptr, out uint lock_fptr, out uint flush_fptr, out uint libkernel_anchor)
         {
             // step 0, setup
             long methid_gettype = _vita.GetMethod(true, "System.Type", "GetType", 1, new string[] { "String" });
@@ -256,7 +256,16 @@ namespace VitaDefiler
             offset.Value = 0x468;
             fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
             alloc_fptr = VitaIntToUInt((Int32)fval.Value);
-            Console.WriteLine("Found unlock 0x{0:X}, lock 0x{1:X}, free 0x{2:X}, alloc 0x{3:X}", unlock_fptr, lock_fptr, free_fptr, alloc_fptr);
+            offset.Value = 0x40;
+            fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
+            flush_fptr = VitaIntToUInt((Int32)fval.Value);
+            // find SceLibKernel import table for anchor
+            import_table = addr - 1 + 0x12DD7E;
+            faddr = _vita.CreateIntPtr(UIntToVitaInt(import_table));
+            offset.Value = 0x0;
+            fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
+            libkernel_anchor = VitaIntToUInt((Int32)fval.Value);
+            Console.WriteLine("Found unlock 0x{0:X}, lock 0x{1:X}, free 0x{2:X}, alloc 0x{3:X}, anchor 0x{4:X}", unlock_fptr, lock_fptr, free_fptr, alloc_fptr, libkernel_anchor);
 
             return 0;
         }
