@@ -14,12 +14,15 @@ namespace VitaDefiler
     class Device
     {
         public List<Variable> Vars { get; private set; }
+        public Dictionary<string, uint> Locals { get; private set; }
         public Network Network { get; private set; }
         public USB USB { get; private set; }
+        public uint LastReturn { get; set; }
 
         public Device(USB usb, Network net)
         {
             Vars = new List<Variable>();
+            Locals = new Dictionary<string, uint>();
             Network = net;
             USB = usb;
         }
@@ -42,6 +45,7 @@ namespace VitaDefiler
                 }
             }
             Vars.Add(var);
+            Console.Error.WriteLine("${0} = 0x{1:X}", i, addr);
             return i;
         }
 
@@ -67,6 +71,12 @@ namespace VitaDefiler
                 Vars[id] = Variable.Null;
             }
             return 0;
+        }
+
+        public void CreateLocal(string name, uint data)
+        {
+            Locals[name] = data;
+            Console.Error.WriteLine("%{0} = 0x{1:X}", name, data);
         }
     }
 }

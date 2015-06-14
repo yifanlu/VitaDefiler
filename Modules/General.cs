@@ -14,6 +14,7 @@ alloc type length               Allocates space for a variable. Type is
 compile file.c file             Compiles file.c to produce file.
 echo [text]                     Prints text to Vita/console screen
 exec addr [arg0] ... [arg3]     Executes code located at address with args.
+                                Return value will be stored into a variable.
 free addr                       Frees memory allocated at addr.
 usbread addr length [file]      Uses USB to dump address. Optional file to 
                                 capture output to. Optional length to read.
@@ -27,9 +28,10 @@ vars                            Print list of variables
 
 Paramaters:
 addr    Can be either an integer address (ex: 0x81000000) or a variable of form
-        $x (for code/data variables) or %x (for local variables). Can also optionally 
+        $x (for code/data pointers) or %x (for data variables). Can also optionally 
         include an offset in the form of $x+num or $x-num (ex: $2+0x100, $0-256, 
-        0x81000000+0x100)
+        0x81000000+0x100). %# is a special variable indicating the last return.
+name    Refers to the name of a data variable (e.g. %name)
 length  Can be a hex number (ex: 0x1000), a decimal number (ex: 256), or a data type 
         including int, uint, char, short, float, etc. int/uint can also be 
         qualified with size, for example: int32 or uint16.
@@ -50,6 +52,13 @@ file    Filename relative to current working directory or absolute path.
                 case "vars":
                     PrintVars(dev);
                     return true;
+                case "local":
+                    if (args.Length >= 2)
+                    {
+                        dev.CreateLocal(args[1], args[0].ToVariable(dev).Data);
+                        return true;
+                    }
+                    break;
             }
             return false;
         }
@@ -76,6 +85,10 @@ file    Filename relative to current working directory or absolute path.
                     continue;
                 }
                 Console.WriteLine("${0}: 0x{1:X}, size: 0x{2:X}, code: {3}", i, dataVars[i].Data, dataVars[i].Size, dataVars[i].IsCode);
+            }
+            foreach (KeyValuePair<string, uint> entry in dev.Locals)
+            {
+                Console.WriteLine("%{0}: 0x{1:X}", entry.Key, entry.Value);
             }
         }
     }

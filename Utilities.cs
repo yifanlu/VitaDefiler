@@ -38,6 +38,22 @@ namespace VitaDefiler
                         }
                     case '%':
                         {
+                            v = new Variable();
+                            v.Size = 0;
+                            v.IsCode = false;
+                            if (self.Length > 1 && self[1] == '#')
+                            {
+                                v.Data = vita.LastReturn;
+                            }
+                            else if (vita.Locals.ContainsKey(self.Substring(1)))
+                            {
+                                v.Data = vita.Locals[self.Substring(1)];
+                            }
+                            else
+                            {
+                                Console.Error.WriteLine("Invalid variable {0}", self.Substring(1));
+                            }
+                            v.Data = (uint)(v.Data + offset);
                             break;
                         }
                     default:

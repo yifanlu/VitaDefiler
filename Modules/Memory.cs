@@ -190,7 +190,7 @@ namespace VitaDefiler.Modules
             if (addr > 0)
             {
                 int idx = dev.CreateVariable(addr, length, isCode);
-                Console.Error.WriteLine("Allocated variable ${0} at 0x{1:X}", idx, addr);
+                dev.LastReturn = addr;
             }
             else
             {

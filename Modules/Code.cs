@@ -80,9 +80,12 @@ namespace VitaDefiler.Modules
         public void Execute(Device dev, uint[] args)
         {
             byte[] resp;
+            uint ret;
             if (dev.Network.RunCommand(Command.Execute, args, out resp) != Command.Error)
             {
-                Console.Error.WriteLine("Return value: 0x{0:X}", BitConverter.ToInt32(resp, 0));
+                ret = BitConverter.ToUInt32(resp, 0);
+                Console.Error.WriteLine("Return value: 0x{0:X}", ret);
+                dev.LastReturn = ret;
             }
         }
     }
