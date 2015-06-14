@@ -24,6 +24,8 @@ namespace VitaDefilerClient
         Echo = 9,
 		SetFuncPtrs = 10,
 		Exit = 11,
+		PushFile = 12,
+		PullFile = 13,
 		GetLogger = 14,
 		EnableGUI = 15
     }
@@ -236,6 +238,43 @@ namespace VitaDefilerClient
 					{
 						alive = false;
 						resp = BitConverter.GetBytes(0);
+						break;
+					}
+					case Command.PushFile:
+					{
+						int pathlen = BitConverter.ToInt32(data, 0);
+						string path = Encoding.ASCII.GetString(data, sizeof(int), pathlen);
+						try
+						{
+							AppMain.LogLine("Write: {0}", path);
+							using (FileStream fs = File.OpenWrite(path))
+							{
+								fs.Write(data, sizeof(int) + pathlen, data.Length - sizeof(int) - pathlen);
+							}
+						}
+						catch (IOException ex)
+						{
+							AppMain.LogLine("Error writing file: {0}", ex.Message);
+							resp_cmd = Command.Error;
+							resp = Encoding.ASCII.GetBytes(ex.Message);
+						}
+						break;
+					}
+					case Command.PullFile:
+					{
+						int pathlen = BitConverter.ToInt32(data, 0);
+						string path = Encoding.ASCII.GetString(data, sizeof(int), pathlen);
+						try
+						{
+							AppMain.LogLine("Read: {0}", path);
+							resp = File.ReadAllBytes(path);
+						}
+						catch (IOException ex)
+						{
+							AppMain.LogLine("Error reading file: {0}", ex.Message);
+							resp_cmd = Command.Error;
+							resp = Encoding.ASCII.GetBytes(ex.Message);
+						}
 						break;
 					}
 					case Command.GetLogger:
