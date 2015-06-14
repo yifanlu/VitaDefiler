@@ -125,19 +125,43 @@ namespace VitaDefiler
 
             // wait for commands
             Console.Error.WriteLine("Ready for commands. Type 'help' for a listing.");
-            Device dev = new Device(usb, net);
+            StringReader reader = null;
+            string line = null;
             while (true)
             {
-                Console.Write("> ");
-                string line = Console.ReadLine();
-                if (line == "exit")
+                if (dev.Script != null)
                 {
-                    net.RunCommand(Command.Exit);
-                    break;
+                    Console.Error.WriteLine("Running script...");
+                    reader = new StringReader(dev.Script);
+                    dev.Script = null;
+                }
+                if (reader != null)
+                {
+                    line = reader.ReadLine();
+#if DEBUG
+                    Console.WriteLine("> {0}", line);
+#endif
+                }
+                else
+                {
+                    Console.Write("> ");
+                    line = Console.ReadLine();
                 }
                 if (String.IsNullOrEmpty(line))
                 {
-                    Console.Error.WriteLine("Enter a command, or 'help' for a list of commands.");
+                    if (reader == null)
+                    {
+                        Console.Error.WriteLine("Enter a command, or 'help' for a list of commands.");
+                    }
+                    else
+                    {
+                        reader = null;
+                    }
+                }
+                else if (line == "exit")
+                {
+                    net.RunCommand(Command.Exit);
+                    break;
                 }
                 else
                 {

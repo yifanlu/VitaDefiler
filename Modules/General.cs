@@ -36,6 +36,7 @@ get addr name                   Reads a 32-bit little-endian pointer from addr.
 local addr name                 Creates a local variable accessible with '%name'
                                 and value of pointer addr casted to an integer.
 vars                            Print list of variables
+script file                     Runs all commands from file.
 
 Paramaters:
 addr    Can be either an integer address (ex: 0x81000000) or a variable of form

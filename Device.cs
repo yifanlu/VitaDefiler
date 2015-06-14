@@ -18,6 +18,7 @@ namespace VitaDefiler
         public Network Network { get; private set; }
         public USB USB { get; private set; }
         public uint LastReturn { get; set; }
+        public string Script { get; set; }
 
         public Device(USB usb, Network net)
         {
