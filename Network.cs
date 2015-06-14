@@ -20,7 +20,9 @@ namespace VitaDefiler
         Execute = 8,
         Echo = 9,
         SetFuncPtrs = 10,
-        Exit = 11
+        Exit = 11,
+        PushFile = 12,
+        PullFile = 13 
     }
 
     class Network

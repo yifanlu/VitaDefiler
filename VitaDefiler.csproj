@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Device.cs" />
     <Compile Include="Modules\Code.cs" />
+    <Compile Include="Modules\FileIO.cs" />
     <Compile Include="Modules\General.cs" />
     <Compile Include="Modules\IModule.cs" />
     <Compile Include="Modules\Memory.cs" />

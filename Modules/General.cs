@@ -24,6 +24,17 @@ read addr [length] [file]       Uses network to dump address. Optional file
 write addr [length] (file|int)  Writes binary data or an integer to addr.
                                 If no length is specified, length will be 
                                 file size or variable size.
+                                code.
+pull srcfile [dstfile]          Pulls a file from the device. If dstfile 
+                                is not specified, name will be same as src.
+push srcfile [dstfile]          Pushes a file to the device. If dstfile 
+                                is not specified, name will be same as src.
+set addr [value|name]           Writes a 32-bit little-endian integer at addr.
+                                Value can be a variable.
+get addr name                   Reads a 32-bit little-endian pointer from addr.
+                                Stores data to '%name'
+local addr name                 Creates a local variable accessible with '%name'
+                                and value of pointer addr casted to an integer.
 vars                            Print list of variables
 
 Paramaters:
