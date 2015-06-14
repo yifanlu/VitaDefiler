@@ -9,26 +9,25 @@ namespace VitaDefiler
 {
     class Program
     {
-        static readonly Type[] Mods = {typeof(Code), typeof(General), typeof(Memory)};
-
-        static void ConsoleCallback(string text)
-        {
-#if DEBUG
-            Console.WriteLine("[Vita] {0}", text);
-#endif
-        }
+        static readonly Type[] Mods = {typeof(Code), typeof(General), typeof(Memory), typeof(FileIO), typeof(Scripting)};
 
         static void Main(string[] args)
         {
+            bool enablegui = true;
+
             if (args.Length < 1)
             {
-                Console.Error.WriteLine("usage: VitaDefiler.exe package\n    package is path to PSM package");
+                Console.Error.WriteLine("usage: VitaDefiler.exe package [-nogui] [script]\n    package is path to PSM package\n    nogui starts client without GUI\n    script is the script to run");
                 return;
             }
             if (!File.Exists(args[0]))
             {
                 Console.Error.WriteLine("cannot find package file");
                 return;
+            }
+            if (args.Length >= 2 && args[1] == "-nogui")
+            {
+                enablegui = false;
             }
 #if USE_APP_KEY
             if (!File.Exists(args[1]))
@@ -63,9 +62,11 @@ namespace VitaDefiler
             int port = 0;
             usb.Connect((text) =>
             {
-                ConsoleCallback(text);
                 if (text.StartsWith("XXVCMDXX:"))
                 {
+#if DEBUG
+                    Console.Error.WriteLine("[Vita] {0}", text);
+#endif
                     string[] cmd = text.Trim().Split(':');
                     switch (cmd[1])
                     {

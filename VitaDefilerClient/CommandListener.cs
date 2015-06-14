@@ -1,7 +1,9 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Threading;
@@ -21,21 +23,35 @@ namespace VitaDefilerClient
         Execute = 8,
         Echo = 9,
 		SetFuncPtrs = 10,
-		Exit = 11
+		Exit = 11,
+		GetLogger = 14,
+		EnableGUI = 15
     }
 	
 	public class CommandListener
 	{
+		
 		private const int LISTEN_PORT = 4445;
 		private static IntPtr pss_code_mem_alloc = IntPtr.Zero;
 		private static IntPtr pss_code_mem_free = IntPtr.Zero;
 		private static IntPtr pss_code_mem_unlock = IntPtr.Zero;
 		private static IntPtr pss_code_mem_lock = IntPtr.Zero;
+		private delegate int LoggerDelegate([MarshalAs(UnmanagedType.LPStr)]string line);
+		private static LoggerDelegate log_delegate = LogLine;
+		private static IntPtr log_delegate_ptr = IntPtr.Zero;
 		private static TcpListener listener;
+		
 		private static bool alive = true;
 		
 		public CommandListener ()
 		{
+		}
+		
+		private static int LogLine([MarshalAs(UnmanagedType.LPStr)]string line)
+		{
+			AppMain.LogLine("{0}", line);
+			Console.WriteLine("{0}", line);
+			return 0;
 		}
 		
 		public static void InitializeNetwork ()
@@ -220,6 +236,21 @@ namespace VitaDefilerClient
 					{
 						alive = false;
 						resp = BitConverter.GetBytes(0);
+						break;
+					}
+					case Command.GetLogger:
+					{
+						if (log_delegate_ptr == IntPtr.Zero)
+						{
+							log_delegate_ptr = Marshal.GetFunctionPointerForDelegate(log_delegate);
+						}
+						AppMain.LogLine("Logger at 0x{0:x}", (uint)log_delegate_ptr);
+						resp = BitConverter.GetBytes((uint)log_delegate_ptr);
+						break;
+					}
+					case Command.EnableGUI:
+					{
+						AppMain.EnableGUI ();
 						break;
 					}
 					default:

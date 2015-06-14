@@ -29,24 +29,45 @@ namespace VitaDefilerClient
 		private static readonly int LOG_SIZE = 20;
 		private static string log;
 		private static Label label;
+		private static bool enable_gui;
+		private static bool gui_enabled;
         
         public static void Main (string[] args)
         {
-            InitializeGraphics ();
+			// Init log
+			log = string.Empty;
+			for (int i = 0; i < LOG_SIZE; i++)
+			{
+				log += "\n";
+			}
 			
 			AppMain.LogLine("Vita Defiler Client started");
-			AppMain.LogLine("For Internal Use Only");
 			
 			CommandListener.InitializeNetwork ();
 			typeof(NativeFunctions).GetMethods(); // take care of lazy init
 			
 			Console.WriteLine("XXVCMDXX:DONE"); // signal PC
 			
+			gui_enabled = false;
+			
             while (true) {
-				Update ();
-            	Render ();
+				if (enable_gui)
+				{
+					enable_gui = false;
+					InitializeGraphics ();
+				}
+				if (gui_enabled)
+				{
+					Update ();
+	            	Render ();
+				}
             }
         }
+		
+		public static void EnableGUI ()
+		{
+			enable_gui = true;
+		}
 		
 		public static void LogLine (string format, params object[] args)
 		{
@@ -69,13 +90,6 @@ namespace VitaDefilerClient
             
             // Initialize UI Toolkit
             UISystem.Initialize (graphics);
-			
-			// Init log
-			log = string.Empty;
-			for (int i = 0; i < LOG_SIZE; i++)
-			{
-				log += "\n";
-			}
 
             // Create scene
             Scene myScene = new Scene();
@@ -88,6 +102,8 @@ namespace VitaDefilerClient
             myScene.RootWidget.AddChildLast(label);
             // Set scene
             UISystem.SetScene(myScene, null);
+			
+			gui_enabled = true;
         }
 		
 		public static void Update ()
