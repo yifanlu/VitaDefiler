@@ -41,7 +41,7 @@ namespace VitaDefiler
                 _sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _sock.Connect(remoteEP);
                 _sock.SendTimeout = 20000;
-                _sock.ReceiveTimeout = 20000;
+                //_sock.ReceiveTimeout = 20000;
                 return true;
             }
             catch (Exception ex)

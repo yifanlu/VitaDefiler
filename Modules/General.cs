@@ -21,9 +21,11 @@ usbread addr length [file]      Uses USB to dump address. Optional file to
 read addr [length] [file]       Uses network to dump address. Optional file 
                                 to capture output to. If no length is 
                                 specified, it will be size of variable.
-write addr [length] (file|int)  Writes binary data or an integer to addr.
+write addr [length] file        Writes binary data from a file to addr.
                                 If no length is specified, length will be 
-                                file size or variable size.
+                                file size. Code memory write inferred if 
+                                'addr' is a pointer variable from alloc code.
+writecode addr [length] file    Same as 'write' but force variable to point to 
                                 code.
 pull srcfile [dstfile]          Pulls a file from the device. If dstfile 
                                 is not specified, name will be same as src.
