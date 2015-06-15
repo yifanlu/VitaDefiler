@@ -242,7 +242,11 @@ namespace VitaDefiler
             Console.WriteLine("Found ptr for loaded_images_hash at: 0x{0:X}", images_hash_ptr);
 
             // step 4, use offset to find import table for SceLibMonoBridge functions
+#if PSM_111
+            uint import_table = addr - 1 + 0x12dbaa;
+#else
             uint import_table = addr - 1 + 0x12D7A2;
+#endif
             ValueImpl faddr = _vita.CreateIntPtr(UIntToVitaInt(import_table));
             offset.Value = 0x184;
             ValueImpl fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
@@ -253,14 +257,22 @@ namespace VitaDefiler
             offset.Value = 0x350;
             fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
             free_fptr = VitaIntToUInt((Int32)fval.Value);
+#if PSM_111
+            offset.Value = 0x460;
+#else
             offset.Value = 0x468;
+#endif
             fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
             alloc_fptr = VitaIntToUInt((Int32)fval.Value);
             offset.Value = 0x40;
             fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
             flush_fptr = VitaIntToUInt((Int32)fval.Value);
             // find SceLibKernel import table for anchor
+#if PSM_111
+            import_table = addr - 1 + 0x12e18a;
+#else
             import_table = addr - 1 + 0x12DD7E;
+#endif
             faddr = _vita.CreateIntPtr(UIntToVitaInt(import_table));
             offset.Value = 0x0;
             fval = _vita.RunMethod(methid_readint32, null, new ValueImpl[] { faddr, offset });
