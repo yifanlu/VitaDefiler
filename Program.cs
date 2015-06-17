@@ -17,7 +17,7 @@ namespace VitaDefiler
 
             if (args.Length < 1)
             {
-                Console.Error.WriteLine("usage: VitaDefiler.exe package [-nogui] [script]\n    package is path to PSM package\n    nogui starts client without GUI\n    script is the script to run");
+                Console.Error.WriteLine("usage: VitaDefiler.exe package [-nodisp] [script args]\n    package is path to PSM package\n    nodisp starts client without logging to screen\n    script is the script to run\n    args are arguments for the script");
                 return;
             }
             if (!File.Exists(args[0]))
@@ -25,7 +25,7 @@ namespace VitaDefiler
                 Console.Error.WriteLine("cannot find package file");
                 return;
             }
-            if (args.Length >= 2 && args[1] == "-nogui")
+            if (args.Length >= 2 && args[1] == "-nodisp")
             {
                 enablegui = false;
             }
@@ -47,11 +47,17 @@ namespace VitaDefiler
 
             // initialize the modules
             List<IModule> mods = new List<IModule>();
+            Scripting scripting = null;
             foreach (Type t in Mods)
             {
                 if (typeof(IModule).IsAssignableFrom(t))
                 {
-                    mods.Add((IModule)Activator.CreateInstance(t));
+                    IModule mod = (IModule)Activator.CreateInstance(t);
+                    if (t == typeof(Scripting))
+                    {
+                        scripting = mod as Scripting;
+                    }
+                    mods.Add(mod);
                 }
             }
 
@@ -128,7 +134,7 @@ namespace VitaDefiler
             // enable gui
             if (enablegui)
             {
-                Console.Error.WriteLine("Enabling GUI");
+                Console.Error.WriteLine("Enabling display output");
                 net.RunCommand(Command.EnableGUI, out resp);
             }
 
@@ -153,6 +159,26 @@ namespace VitaDefiler
             dev.CreateLocal("pss_code_mem_flush_icache", funcs[4]);
             dev.CreateLocal("logline", logline_func);
             dev.CreateLocal("libkernel_anchor", libkernel_anchor);
+
+            // run script if needed
+            if ((!enablegui && args.Length >= 3) || (enablegui && args.Length >= 2))
+            {
+                string script;
+                string[] scriptargs;
+                if (enablegui)
+                {
+                    script = args[1];
+                    scriptargs = new string[args.Length - 2];
+                    Array.Copy(args, 2, scriptargs, 0, args.Length - 2);
+                }
+                else
+                {
+                    script = args[2];
+                    scriptargs = new string[args.Length - 3];
+                    Array.Copy(args, 3, scriptargs, 0, args.Length - 3);
+                }
+                scripting.ParseScript(dev, script, scriptargs);
+            }
 
             // wait for commands
             Console.Error.WriteLine("Ready for commands. Type 'help' for a listing.");

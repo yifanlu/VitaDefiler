@@ -40,7 +40,7 @@ namespace Sce.Psm
 
     internal static class ScePsmEdata32
     {
-        private const string NATIVE_DLL = "psm_encrypter32.dll";
+        private const string NATIVE_DLL = @"..\lib\psm_encrypter32.dll";
 
         [DllImport(NATIVE_DLL, EntryPoint = "scePsmEdataEncrypt", CharSet = CharSet.Ansi)]
         public static extern ScePsmEdataStatus Encrypt(string inFile, string outFile, string installPath, ScePsmEdataType type, IntPtr devPkcs12, int devPkcs12Size, IntPtr hostKdbg, int hostKdbgSize);
@@ -52,7 +52,7 @@ namespace Sce.Psm
     internal static class ScePsmEdata64
     {
         // Fields
-        private const string NATIVE_DLL = "psm_encrypter64.dll";
+        private const string NATIVE_DLL = @"..\lib\psm_encrypter64.dll";
 
         // Methods
         [DllImport(NATIVE_DLL, EntryPoint = "scePsmEdataEncrypt", CharSet = CharSet.Ansi)]

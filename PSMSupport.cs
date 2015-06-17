@@ -62,15 +62,17 @@ namespace VitaDefiler.PSM
 
     public class TransportFunctions
     {
-        [DllImport("host_transport64.dll", EntryPoint = "scePsmHTCloseHandle")]
+        const string NATIVE_LIB = @"lib\host_transport64.dll";
+
+        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTCloseHandle")]
         public static extern int CloseHandle(int src, int handle);
-        [DllImport("host_transport64.dll", EntryPoint = "scePsmHTCreateFile", CharSet = CharSet.Ansi)]
+        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTCreateFile", CharSet = CharSet.Ansi)]
         public static extern int CreateFile(int src, string comname);
-        [DllImport("host_transport64.dll", EntryPoint = "scePsmHTGetReceiveSize")]
+        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTGetReceiveSize")]
         public static extern int GetReceiveSize(int src, int hFile);
-        [DllImport("host_transport64.dll", EntryPoint = "scePsmHTReadFile", SetLastError = true)]
+        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTReadFile", SetLastError = true)]
         public static extern int ReadFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead);
-        [DllImport("host_transport64.dll", EntryPoint = "scePsmHTWriteFile", SetLastError = true)]
+        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTWriteFile", SetLastError = true)]
         public static extern int WriteFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten);
 
         public static string GetVitaPortWithSerial(string serial)
@@ -96,78 +98,501 @@ namespace VitaDefiler.PSM
         }
     }
 
-    public class PSMFunctions
-    {
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevConnect")]
-        public static extern int Connect([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevCreatePackage")]
-        public static extern int CreatePackage([MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string dirForPack);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevDisconnect")]
-        public static extern int Disconnect([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevExistAppExeKey")]
-        public static extern int ExistAppExeKey([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, long accountId, [MarshalAs(UnmanagedType.LPStr)] string titleIdentifier, [MarshalAs(UnmanagedType.LPStr)] string env);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevExtractPackage")]
-        public static extern int ExtractPackage([MarshalAs(UnmanagedType.LPStr)] string dirExtract, [MarshalAs(UnmanagedType.LPStr)] string packageFile);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevGetDeviceSeed")]
-        public static extern int GetDeviceSeed([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string filename);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevGetErrStr")]
-        public static extern int GetErrStr([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder errstr);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevGetLog")]
-        public static extern int GetLog([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder logstr);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevInstall")]
-        public static extern int Install([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string appId);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevKill")]
-        public static extern int Kill([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevLaunch")]
-        public static extern int Launch([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId, bool debug, bool profile, bool keepnet, bool logwaiting, [MarshalAs(UnmanagedType.LPStr)] string arg);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevListApplications")]
-        public static extern int ListApplications([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0, SizeConst = 100)] ScePsmApplication[] appArray);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevListDevices")]
-        public static extern int ListDevices([In, Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0, SizeConst = 8)] ScePsmDevice[] deviceArray);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevPickFileFromPackage")]
-        public static extern int PickFileFromPackage([MarshalAs(UnmanagedType.LPStr)] string outName, [MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string inName);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevSetAdbExePath", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int SetAdbExePath(string path);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevSetAppExeKey")]
-        public static extern int SetAppExeKey([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string filename);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevSetConsoleWrite")]
-        public static extern int SetConsoleWrite([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, IntPtr proc);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevUninstall")]
-        public static extern int Uninstall([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId);
-        [DllImport(@"psm_device64.dll", EntryPoint = "scePsmDevVersion")]
-        public static extern int Version([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
-    }
+    internal delegate int scePsmDevConnect([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
 
-    public class DRMFunctions
-    {
-        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGenerateKpub", CharSet = CharSet.Ansi)]
-        public static extern int scePsmDrmGenerateKpub(string signInID, string password, string commonName, ScePsmDrmKpubUploadState uploadState, out IntPtr devPkcs12, out int devPkcs12Size, IntPtr certCommonName, IntPtr certCreateTime);
-        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGenerateKpubInit", CharSet = CharSet.Ansi)]
-        public static extern int scePsmDrmGenerateKpubInit(string pu_ver, string env, string proxyServer, int proxyPort);
-        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGenerateKpubTerm", CharSet = CharSet.Ansi)]
-        public static extern int scePsmDrmGenerateKpubTerm();
-        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGenerateQaKpub", CharSet = CharSet.Ansi)]
-        public static extern int scePsmDrmGenerateQaKpub(string signInID, string password, string commonName, ScePsmDrmKpubUploadState uploadState, out IntPtr devPkcs12, out int devPkcs12Size, IntPtr certCommonName, IntPtr certCreateTime);
-        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGetAccountId", CharSet = CharSet.Ansi)]
-        public static extern int scePsmDrmGetAccountId(IntPtr devPkcs12, int devPkcs12Size, IntPtr accountId);
-        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmGetCertInfo", CharSet = CharSet.Ansi)]
-        public static extern int scePsmDrmGetCertInfo(IntPtr devPkcs12, int devPkcs12Size, IntPtr certCommonName, IntPtr certCreateTime);
-        [DllImport(@"kpub_generator64.dll", EntryPoint = "scePsmDrmReleaseDevPkcs12", CharSet = CharSet.Ansi)]
-        public static extern int scePsmDrmReleaseDevPkcs12(IntPtr devPkcs12);
+    internal delegate int scePsmDevCreatePackage([MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string dirForPack);
 
-        public static long ReadAccountIdFromKdevP12(byte[] bsKdev12)
+    internal delegate int scePsmDevDisconnect([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+
+    internal delegate int scePsmDevExistAppExeKey([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, long accountId, [MarshalAs(UnmanagedType.LPStr)] string titleIdentifier, [MarshalAs(UnmanagedType.LPStr)] string env);
+
+    internal delegate int scePsmDevExtractPackage([MarshalAs(UnmanagedType.LPStr)] string dirExtract, [MarshalAs(UnmanagedType.LPStr)] string packageFile);
+
+    internal delegate int scePsmDevGetDeviceSeed([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string filename);
+
+    internal delegate int scePsmDevGetErrStr([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder errstr);
+
+    internal delegate int scePsmDevGetLog([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder logstr);
+
+    internal delegate int scePsmDevGetPsmAppStatus([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+
+    internal delegate int scePsmDevInstall([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string appId);
+
+    internal delegate int scePsmDevKill([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+
+    internal delegate int scePsmDevLaunch([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId, bool debug, bool profile, bool keepnet, bool logwaiting, [MarshalAs(UnmanagedType.LPStr)] string arg);
+
+    internal delegate int scePsmDevListApplications([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0, SizeConst = 100)] ScePsmApplication[] appArray);
+
+    internal delegate int scePsmDevListDevices([In, Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0, SizeConst = 8)] ScePsmDevice[] deviceArray);
+
+    internal delegate int scePsmDevPickFileFromPackage([MarshalAs(UnmanagedType.LPStr)] string outName, [MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string inName);
+
+    internal delegate int scePsmDevRequestEndPsmApp([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, string msg);
+
+    internal delegate int scePsmDevResponseEndPsmApp([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, int response, string option);
+
+    internal delegate int scePsmDevSetAdbExePath(string path);
+
+    internal delegate int scePsmDevSetAppExeKey([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string filename);
+
+    internal delegate int scePsmDevSetConsoleWrite([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, IntPtr proc);
+
+    internal delegate int scePsmDevUninstall([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId);
+
+    internal delegate int scePsmDevVersion([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+
+    internal static class PSMFunctions
+    {
+        // Fields
+        private static scePsmDevConnect _scePsmDevConnect;
+        private static scePsmDevCreatePackage _scePsmDevCreatePackage;
+        private static scePsmDevDisconnect _scePsmDevDisconnect;
+        private static scePsmDevExistAppExeKey _scePsmDevExistAppExeKey;
+        private static scePsmDevExtractPackage _scePsmDevExtractPackage;
+        private static scePsmDevGetDeviceSeed _scePsmDevGetDeviceSeed;
+        private static scePsmDevGetErrStr _scePsmDevGetErrStr;
+        private static scePsmDevGetLog _scePsmDevGetLog;
+        private static scePsmDevGetPsmAppStatus _scePsmDevGetPsmAppStatus;
+        private static scePsmDevInstall _scePsmDevInstall;
+        private static scePsmDevKill _scePsmDevKill;
+        private static scePsmDevLaunch _scePsmDevLaunch;
+        private static scePsmDevListApplications _scePsmDevListApplications;
+        private static scePsmDevListDevices _scePsmDevListDevices;
+        private static scePsmDevPickFileFromPackage _scePsmDevPickFileFromPackage;
+        private static scePsmDevRequestEndPsmApp _scePsmDevRequestEndPsmApp;
+        private static scePsmDevResponseEndPsmApp _scePsmDevResponseEndPsmApp;
+        private static scePsmDevSetAdbExePath _scePsmDevSetAdbExePath;
+        private static scePsmDevSetAppExeKey _scePsmDevSetAppExeKey;
+        private static scePsmDevSetConsoleWrite _scePsmDevSetConsoleWrite;
+        private static scePsmDevUninstall _scePsmDevUninstall;
+        private static scePsmDevVersion _scePsmDevVersion;
+        private const int APPLICATION_NUM = 100;
+        private const int DEVICE_NUM = 8;
+        private const string dll32 = @"..\lib\psm_device32.dll";
+        private const string dll64 = @"..\lib\psm_device64.dll";
+        private static int mDeviceNum = 0;
+        private static ScePsmDevice[] mDevices = new ScePsmDevice[8];
+        private static Mutex mInfoMutex = new Mutex();
+        private static Dictionary<Guid, Mutex> mutexTable = new Dictionary<Guid, Mutex>();
+        public const int SCE_PSM_DEVICE_OK = 0;
+        public const int SCE_PSM_HANDLE_MIN = 1;
+        public const int TARGET_ANDROID = 1;
+        public static string[] TARGET_NAME = new string[] { "Simulater", "Android", "Vita" };
+        public const int TARGET_PS_VITA = 2;
+        public const int TARGET_SIMULATOR = 0;
+
+        // Methods
+        public static int Connect(Guid guid)
         {
-            long[] destination = new long[1];
-            IntPtr ptr = Marshal.AllocHGlobal(bsKdev12.Length);
-            IntPtr accountId = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(long)));
-            Marshal.Copy(bsKdev12, 0, ptr, bsKdev12.Length);
-            scePsmDrmGenerateKpubInit("1.21.5317.31657 - 2014/07/23 03:35:16", "np", null, 0);
-            scePsmDrmGetAccountId(ptr, bsKdev12.Length, accountId);
-            scePsmDrmGenerateKpubTerm();
-            Marshal.Copy(accountId, destination, 0, 1);
-            Marshal.FreeHGlobal(ptr);
-            Marshal.FreeHGlobal(accountId);
-            return destination[0];
+            mInfoMutex.WaitOne();
+            int num = _scePsmDevConnect(guid);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevConnect(0x{0:X8} : {1})", num, GetErrStr(num));
+                mInfoMutex.ReleaseMutex();
+                return num;
+            }
+            mInfoMutex.ReleaseMutex();
+            return num;
+        }
+
+        public static int CreatePackage(string packageFile, string dirForPack)
+        {
+            int num = _scePsmDevCreatePackage(packageFile, dirForPack);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevCreatePackage(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int Disconnect(Guid deviceGuid)
+        {
+            mInfoMutex.WaitOne();
+            int num = _scePsmDevDisconnect(deviceGuid);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevDisconnect(0x{0:X8} : {1})", num, GetErrStr(num));
+                mInfoMutex.ReleaseMutex();
+                return num;
+            }
+            mInfoMutex.ReleaseMutex();
+            return num;
+        }
+
+        public static int ExistAppExeKey(Guid deviceGuid, long accountId, string titleIdentifier, string env)
+        {
+            int num = _scePsmDevExistAppExeKey(deviceGuid, accountId, titleIdentifier, env);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevExistAppExeKey(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int ExtractPackage(string dirExtract, string packageFile)
+        {
+            int num = _scePsmDevExtractPackage(dirExtract, packageFile);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevExtractPackage(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int GetDeviceSeed(Guid deviceGuid, string filename)
+        {
+            int num = _scePsmDevGetDeviceSeed(deviceGuid, filename);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevGetDeviceSeed(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static string GetErrStr(int code)
+        {
+            string[] strArray = new string[] { 
+            "SCE_PSM_DEVICE_OK", "SCE_PSM_DEVICE_NO_CONNECTION", "SCE_PSM_DEVICE_INVALID_PACKAGE", "SCE_PSM_DEVICE_INVALID_APPID", "SCE_PSM_DEVICE_INVALID_FILEPATH", "SCE_PSM_DEVICE_CANNOT_ACCESS_STORAGE", "SCE_PSM_DEVICE_STORAGE_FULL", "SCE_PSM_DEVICE_CONNECT_ERROR", "SCE_PSM_DEVICE_CREATE_PACKAGE", "SCE_PSM_DEVICE_CONNECTED_DEVICE", "SCE_PSM_DEVICE_TIMEOUT", "SCE_PSM_DEVICE_NO_LAUNCH_TARGET", "SCE_PSM_DEVICE_VERSION_HOST", "SCE_PSM_DEVICE_VERSION_TARGET", "SCE_PSM_DEVICE_INVALID_PACKET", "SCE_PSM_DEVICE_TARGET_LAUNCHED", 
+            "SCE_PSM_DEVICE_PSMDEVICE_ERROR", "SCE_PSM_DEVICE_PSMDEVICE_OPTION"
+         };
+            string str = "<Define not found>";
+            if (code != 0)
+            {
+                code -= -2147418112;
+                if ((code > 0) && (code < strArray.Length))
+                {
+                    str = strArray[code];
+                }
+                return str;
+            }
+            return strArray[0];
+        }
+
+        public static int GetErrStr(Guid deviceGuid, ref string errstr)
+        {
+            StringBuilder builder = new StringBuilder();
+            int length = _scePsmDevGetErrStr(deviceGuid, builder);
+            errstr = (length == 0) ? "" : builder.ToString().Substring(0, length);
+            if (length < 0)
+            {
+                Console.WriteLine("Error. scePsmDevGetErrStr(0x{0:X8} : {1})", length, GetErrStr(length));
+            }
+            return length;
+        }
+
+        public static int GetLog(Guid deviceGuid, ref string logstr)
+        {
+            StringBuilder builder = new StringBuilder();
+            int length = _scePsmDevGetLog(deviceGuid, builder);
+            logstr = (length == 0) ? "" : builder.ToString().Substring(0, length);
+            if (length < 0)
+            {
+                Console.WriteLine("Error. scePsmDevGetLog(0x{0:X8} : {1})", length, GetErrStr(length));
+            }
+            return length;
+        }
+
+        private static Mutex GetMutex(Guid guid)
+        {
+            if (mutexTable.ContainsKey(guid))
+            {
+                return mutexTable[guid];
+            }
+            Mutex mutex = new Mutex();
+            mInfoMutex.WaitOne();
+            mutexTable[guid] = mutex;
+            mInfoMutex.ReleaseMutex();
+            return mutex;
+        }
+
+        public static int GetPsmAppStatus(Guid deviceGuid)
+        {
+            return _scePsmDevGetPsmAppStatus(deviceGuid);
+        }
+
+        public static void Initialize()
+        {
+            if (IntPtr.Size == 4)
+            {
+                _scePsmDevSetAdbExePath = new scePsmDevSetAdbExePath(scePsmDevSetAdbExePath32);
+                _scePsmDevListDevices = new scePsmDevListDevices(scePsmDevListDevices32);
+                _scePsmDevConnect = new scePsmDevConnect(scePsmDevConnect32);
+                _scePsmDevDisconnect = new scePsmDevDisconnect(scePsmDevDisconnect32);
+                _scePsmDevCreatePackage = new scePsmDevCreatePackage(scePsmDevCreatePackage32);
+                _scePsmDevExtractPackage = new scePsmDevExtractPackage(scePsmDevExtractPackage32);
+                _scePsmDevPickFileFromPackage = new scePsmDevPickFileFromPackage(scePsmDevPickFileFromPackage32);
+                _scePsmDevInstall = new scePsmDevInstall(scePsmDevInstall32);
+                _scePsmDevUninstall = new scePsmDevUninstall(scePsmDevUninstall32);
+                _scePsmDevLaunch = new scePsmDevLaunch(scePsmDevLaunch32);
+                _scePsmDevKill = new scePsmDevKill(scePsmDevKill32);
+                _scePsmDevSetConsoleWrite = new scePsmDevSetConsoleWrite(scePsmDevSetConsoleWrite32);
+                _scePsmDevGetLog = new scePsmDevGetLog(scePsmDevGetLog32);
+                _scePsmDevListApplications = new scePsmDevListApplications(scePsmDevListApplications32);
+                _scePsmDevGetDeviceSeed = new scePsmDevGetDeviceSeed(scePsmDevGetDeviceSeed32);
+                _scePsmDevSetAppExeKey = new scePsmDevSetAppExeKey(scePsmDevSetAppExeKey32);
+                _scePsmDevExistAppExeKey = new scePsmDevExistAppExeKey(scePsmDevExistAppExeKey32);
+                _scePsmDevGetPsmAppStatus = new scePsmDevGetPsmAppStatus(scePsmDevGetPsmAppStatus32);
+                _scePsmDevRequestEndPsmApp = new scePsmDevRequestEndPsmApp(scePsmDevRequestEndPsmApp32);
+                _scePsmDevResponseEndPsmApp = new scePsmDevResponseEndPsmApp(scePsmDevResponseEndPsmApp32);
+                _scePsmDevVersion = new scePsmDevVersion(scePsmDevVersion32);
+                _scePsmDevGetErrStr = new scePsmDevGetErrStr(scePsmDevGetErrStr32);
+            }
+            else
+            {
+                _scePsmDevSetAdbExePath = new scePsmDevSetAdbExePath(scePsmDevSetAdbExePath64);
+                _scePsmDevListDevices = new scePsmDevListDevices(scePsmDevListDevices64);
+                _scePsmDevConnect = new scePsmDevConnect(scePsmDevConnect64);
+                _scePsmDevDisconnect = new scePsmDevDisconnect(scePsmDevDisconnect64);
+                _scePsmDevCreatePackage = new scePsmDevCreatePackage(scePsmDevCreatePackage64);
+                _scePsmDevExtractPackage = new scePsmDevExtractPackage(scePsmDevExtractPackage64);
+                _scePsmDevPickFileFromPackage = new scePsmDevPickFileFromPackage(scePsmDevPickFileFromPackage64);
+                _scePsmDevInstall = new scePsmDevInstall(scePsmDevInstall64);
+                _scePsmDevUninstall = new scePsmDevUninstall(scePsmDevUninstall64);
+                _scePsmDevLaunch = new scePsmDevLaunch(scePsmDevLaunch64);
+                _scePsmDevKill = new scePsmDevKill(scePsmDevKill64);
+                _scePsmDevSetConsoleWrite = new scePsmDevSetConsoleWrite(scePsmDevSetConsoleWrite64);
+                _scePsmDevGetLog = new scePsmDevGetLog(scePsmDevGetLog64);
+                _scePsmDevListApplications = new scePsmDevListApplications(scePsmDevListApplications64);
+                _scePsmDevGetDeviceSeed = new scePsmDevGetDeviceSeed(scePsmDevGetDeviceSeed64);
+                _scePsmDevSetAppExeKey = new scePsmDevSetAppExeKey(scePsmDevSetAppExeKey64);
+                _scePsmDevExistAppExeKey = new scePsmDevExistAppExeKey(scePsmDevExistAppExeKey64);
+                _scePsmDevGetPsmAppStatus = new scePsmDevGetPsmAppStatus(scePsmDevGetPsmAppStatus64);
+                _scePsmDevRequestEndPsmApp = new scePsmDevRequestEndPsmApp(scePsmDevRequestEndPsmApp64);
+                _scePsmDevResponseEndPsmApp = new scePsmDevResponseEndPsmApp(scePsmDevResponseEndPsmApp64);
+                _scePsmDevVersion = new scePsmDevVersion(scePsmDevVersion64);
+                _scePsmDevGetErrStr = new scePsmDevGetErrStr(scePsmDevGetErrStr64);
+            }
+        }
+
+        public static int Install(Guid deviceGuid, string packageFile, string appId)
+        {
+            int num = _scePsmDevInstall(deviceGuid, packageFile, appId);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevInstall(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int Kill(Guid deviceGuid)
+        {
+            int num = _scePsmDevKill(deviceGuid);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevKill(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int Launch(Guid deviceGuid, string appId, bool debug, bool profile, bool keepnet, bool logwaiting, string arg)
+        {
+            int num = _scePsmDevLaunch(deviceGuid, appId, debug, profile, keepnet, logwaiting, arg);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevLaunch(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int ListApplications(Guid deviceGuid, ScePsmApplication[] list)
+        {
+            int num = _scePsmDevListApplications(deviceGuid, list);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevListApplications(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int ListDevices(out ScePsmDevice[] devices)
+        {
+            mDevices = new ScePsmDevice[8];
+            int num = -1;
+            try
+            {
+                mInfoMutex.WaitOne();
+                num = _scePsmDevListDevices(mDevices);
+            }
+            finally
+            {
+                mInfoMutex.ReleaseMutex();
+            }
+            mDeviceNum = num;
+            devices = mDevices;
+            return num;
+        }
+
+        public static void LockConnection(Guid guid)
+        {
+            GetMutex(guid).WaitOne();
+        }
+
+        public static int PickFileFromPackage(string outName, string packageFile, string inName)
+        {
+            int num = _scePsmDevPickFileFromPackage(outName, packageFile, inName);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevPickFileFromPackage(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int RequestEndPsmApp(Guid deviceGuid, string msg)
+        {
+            return _scePsmDevRequestEndPsmApp(deviceGuid, msg);
+        }
+
+        public static int ResponseEndPsmApp(Guid deviceGuid, int response, string option)
+        {
+            return _scePsmDevResponseEndPsmApp(deviceGuid, response, option);
+        }
+
+        [DllImport(dll32, EntryPoint = "scePsmDevConnect")]
+        public static extern int scePsmDevConnect32([MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll64, EntryPoint = "scePsmDevConnect")]
+        public static extern int scePsmDevConnect64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll32, EntryPoint = "scePsmDevCreatePackage")]
+        public static extern int scePsmDevCreatePackage32([MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string dirForPack);
+        [DllImport(dll64, EntryPoint = "scePsmDevCreatePackage")]
+        public static extern int scePsmDevCreatePackage64([MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string dirForPack);
+        [DllImport(dll32, EntryPoint = "scePsmDevDisconnect")]
+        public static extern int scePsmDevDisconnect32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll64, EntryPoint = "scePsmDevDisconnect")]
+        public static extern int scePsmDevDisconnect64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll32, EntryPoint = "scePsmDevExistAppExeKey")]
+        public static extern int scePsmDevExistAppExeKey32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, long accountId, [MarshalAs(UnmanagedType.LPStr)] string titleIdentifier, [MarshalAs(UnmanagedType.LPStr)] string env);
+        [DllImport(dll64, EntryPoint = "scePsmDevExistAppExeKey")]
+        public static extern int scePsmDevExistAppExeKey64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, long accountId, [MarshalAs(UnmanagedType.LPStr)] string titleIdentifier, [MarshalAs(UnmanagedType.LPStr)] string env);
+        [DllImport(dll32, EntryPoint = "scePsmDevExtractPackage")]
+        public static extern int scePsmDevExtractPackage32([MarshalAs(UnmanagedType.LPStr)] string dirExtract, [MarshalAs(UnmanagedType.LPStr)] string packageFile);
+        [DllImport(dll64, EntryPoint = "scePsmDevExtractPackage")]
+        public static extern int scePsmDevExtractPackage64([MarshalAs(UnmanagedType.LPStr)] string dirExtract, [MarshalAs(UnmanagedType.LPStr)] string packageFile);
+        [DllImport(dll32, EntryPoint = "scePsmDevGetDeviceSeed")]
+        public static extern int scePsmDevGetDeviceSeed32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string filename);
+        [DllImport(dll64, EntryPoint = "scePsmDevGetDeviceSeed")]
+        public static extern int scePsmDevGetDeviceSeed64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string filename);
+        [DllImport(dll32, EntryPoint = "scePsmDevGetErrStr")]
+        public static extern int scePsmDevGetErrStr32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder errstr);
+        [DllImport(dll64, EntryPoint = "scePsmDevGetErrStr")]
+        public static extern int scePsmDevGetErrStr64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder errstr);
+        [DllImport(dll32, EntryPoint = "scePsmDevGetLog")]
+        public static extern int scePsmDevGetLog32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder logstr);
+        [DllImport(dll64, EntryPoint = "scePsmDevGetLog")]
+        public static extern int scePsmDevGetLog64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder logstr);
+        [DllImport(dll32, EntryPoint = "scePsmDevGetPsmAppStatus")]
+        public static extern int scePsmDevGetPsmAppStatus32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll64, EntryPoint = "scePsmDevGetPsmAppStatus")]
+        public static extern int scePsmDevGetPsmAppStatus64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll32, EntryPoint = "scePsmDevInstall")]
+        public static extern int scePsmDevInstall32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string appId);
+        [DllImport(dll64, EntryPoint = "scePsmDevInstall")]
+        public static extern int scePsmDevInstall64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string appId);
+        [DllImport(dll32, EntryPoint = "scePsmDevKill")]
+        public static extern int scePsmDevKill32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll64, EntryPoint = "scePsmDevKill")]
+        public static extern int scePsmDevKill64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll32, EntryPoint = "scePsmDevLaunch")]
+        public static extern int scePsmDevLaunch32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId, bool debug, bool profile, bool keepnet, bool logwaiting, [MarshalAs(UnmanagedType.LPStr)] string arg);
+        [DllImport(dll64, EntryPoint = "scePsmDevLaunch")]
+        public static extern int scePsmDevLaunch64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId, bool debug, bool profile, bool keepnet, bool logwaiting, [MarshalAs(UnmanagedType.LPStr)] string arg);
+        [DllImport(dll32, EntryPoint = "scePsmDevListApplications")]
+        public static extern int scePsmDevListApplications32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0, SizeConst = APPLICATION_NUM)] ScePsmApplication[] appArray);
+        [DllImport(dll64, EntryPoint = "scePsmDevListApplications")]
+        public static extern int scePsmDevListApplications64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0, SizeConst = APPLICATION_NUM)] ScePsmApplication[] appArray);
+        [DllImport(dll32, EntryPoint = "scePsmDevListDevices")]
+        public static extern int scePsmDevListDevices32([In, Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0, SizeConst = DEVICE_NUM)] ScePsmDevice[] deviceArray);
+        [DllImport(dll64, EntryPoint = "scePsmDevListDevices")]
+        public static extern int scePsmDevListDevices64([In, Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 0, SizeConst = DEVICE_NUM)] ScePsmDevice[] deviceArray);
+        [DllImport(dll32, EntryPoint = "scePsmDevPickFileFromPackage")]
+        public static extern int scePsmDevPickFileFromPackage32([MarshalAs(UnmanagedType.LPStr)] string outName, [MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string inName);
+        [DllImport(dll64, EntryPoint = "scePsmDevPickFileFromPackage")]
+        public static extern int scePsmDevPickFileFromPackage64([MarshalAs(UnmanagedType.LPStr)] string outName, [MarshalAs(UnmanagedType.LPStr)] string packageFile, [MarshalAs(UnmanagedType.LPStr)] string inName);
+        [DllImport(dll32, EntryPoint = "scePsmDevRequestEndPsmApp")]
+        public static extern int scePsmDevRequestEndPsmApp32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, string msg);
+        [DllImport(dll32, EntryPoint = "scePsmDevRequestEndPsmApp")]
+        public static extern int scePsmDevRequestEndPsmApp64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, string msg);
+        [DllImport(dll32, EntryPoint = "scePsmDevResponseEndPsmApp")]
+        public static extern int scePsmDevResponseEndPsmApp32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, int response, string option);
+        [DllImport(dll32, EntryPoint = "scePsmDevResponseEndPsmApp")]
+        public static extern int scePsmDevResponseEndPsmApp64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, int response, string option);
+        [DllImport(dll32, EntryPoint = "scePsmDevSetAdbExePath", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern int scePsmDevSetAdbExePath32(string path);
+        [DllImport(dll64, EntryPoint = "scePsmDevSetAdbExePath", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern int scePsmDevSetAdbExePath64(string path);
+        [DllImport(dll32, EntryPoint = "scePsmDevSetAppExeKey")]
+        public static extern int scePsmDevSetAppExeKey32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string filename);
+        [DllImport(dll64, EntryPoint = "scePsmDevSetAppExeKey")]
+        public static extern int scePsmDevSetAppExeKey64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string filename);
+        [DllImport(dll32, EntryPoint = "scePsmDevSetConsoleWrite")]
+        public static extern int scePsmDevSetConsoleWrite32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, IntPtr proc);
+        [DllImport(dll64, EntryPoint = "scePsmDevSetConsoleWrite")]
+        public static extern int scePsmDevSetConsoleWrite64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, IntPtr proc);
+        [DllImport(dll32, EntryPoint = "scePsmDevUninstall")]
+        public static extern int scePsmDevUninstall32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId);
+        [DllImport(dll64, EntryPoint = "scePsmDevUninstall")]
+        public static extern int scePsmDevUninstall64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appId);
+        [DllImport(dll32, EntryPoint = "scePsmDevVersion")]
+        public static extern int scePsmDevVersion32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll64, EntryPoint = "scePsmDevVersion")]
+        public static extern int scePsmDevVersion64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        public static int SetAdbExePath(string path)
+        {
+            return _scePsmDevSetAdbExePath(path);
+        }
+
+        public static int SetAppExeKey(Guid deviceGuid, string filename)
+        {
+            int num = _scePsmDevSetAppExeKey(deviceGuid, filename);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevSetAppExeKey(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int SetConsoleWrite(Guid deviceGuid, IntPtr proc)
+        {
+            int num = _scePsmDevSetConsoleWrite(deviceGuid, proc);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevSetConsoleWrite(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static int Uninstall(Guid deviceGuid, string appId)
+        {
+            int num = _scePsmDevUninstall(deviceGuid, appId);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevUninstall(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        public static void UnlockConnection(Guid guid)
+        {
+            GetMutex(guid).ReleaseMutex();
+        }
+
+        public static int Version(Guid deviceGuid)
+        {
+            int num = _scePsmDevVersion(deviceGuid);
+            if (num < 0)
+            {
+                Console.WriteLine("Error. scePsmDevVersion(0x{0:X8} : {1})", num, GetErrStr(num));
+            }
+            return num;
+        }
+
+        // Nested Types
+        public enum TargetType
+        {
+            Simulater,
+            Android,
+            Vita
         }
     }
 

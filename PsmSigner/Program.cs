@@ -61,8 +61,6 @@ namespace PsmSigner
 
             // next create the package
             PsmDevice.CreatePackage(outpath, tmp);
-
-            Console.ReadLine();
         }
 
         public static bool NeedsEncryption(string path)

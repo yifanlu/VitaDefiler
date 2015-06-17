@@ -521,8 +521,8 @@ namespace VitaDefiler.PSM
             int ret;
             for (; ; )
             {
-                ScePsmDevice[] deviceArray = new ScePsmDevice[8];
-                PSMFunctions.ListDevices(deviceArray);
+                ScePsmDevice[] deviceArray;
+                PSMFunctions.ListDevices(out deviceArray);
                 foreach (ScePsmDevice dev in deviceArray)
                 {
                     if (dev.online > 0)
