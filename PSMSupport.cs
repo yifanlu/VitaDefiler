@@ -169,8 +169,8 @@ namespace VitaDefiler.PSM
         private static scePsmDevVersion _scePsmDevVersion;
         private const int APPLICATION_NUM = 100;
         private const int DEVICE_NUM = 8;
-        private const string dll32 = @"..\lib\psm_device32.dll";
-        private const string dll64 = @"..\lib\psm_device64.dll";
+        private const string dll32 = @"lib\psm_device32.dll";
+        private const string dll64 = @"lib\psm_device64.dll";
         private static int mDeviceNum = 0;
         private static ScePsmDevice[] mDevices = new ScePsmDevice[8];
         private static Mutex mInfoMutex = new Mutex();
@@ -181,6 +181,11 @@ namespace VitaDefiler.PSM
         public static string[] TARGET_NAME = new string[] { "Simulater", "Android", "Vita" };
         public const int TARGET_PS_VITA = 2;
         public const int TARGET_SIMULATOR = 0;
+
+        static PSMFunctions()
+        {
+            Initialize();
+        }
 
         // Methods
         public static int Connect(Guid guid)
