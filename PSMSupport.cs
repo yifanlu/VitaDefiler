@@ -62,18 +62,66 @@ namespace VitaDefiler.PSM
 
     public class TransportFunctions
     {
-        const string NATIVE_LIB = @"lib\host_transport64.dll";
+        private static class ScePsmHT32
+        {
+            // Fields
+            private const string NATIVE_DLL = @"support\tools\lib\host_transport32.dll";
 
-        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTCloseHandle")]
-        public static extern int CloseHandle(int src, int handle);
-        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTCreateFile", CharSet = CharSet.Ansi)]
-        public static extern int CreateFile(int src, string comname);
-        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTGetReceiveSize")]
-        public static extern int GetReceiveSize(int src, int hFile);
-        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTReadFile", SetLastError = true)]
-        public static extern int ReadFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead);
-        [DllImport(NATIVE_LIB, EntryPoint = "scePsmHTWriteFile", SetLastError = true)]
-        public static extern int WriteFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten);
+            // Methods
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTCloseHandle")]
+            public static extern int CloseHandle(int src, int handle);
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTCreateFile", CharSet = CharSet.Ansi)]
+            public static extern int CreateFile(int src, string comname);
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTGetReceiveSize")]
+            public static extern int GetReceiveSize(int src, int hFile);
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTReadFile", SetLastError = true)]
+            public static extern int ReadFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead);
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTWriteFile", SetLastError = true)]
+            public static extern int WriteFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten);
+        }
+
+        private static class ScePsmHT64
+        {
+            // Fields
+            private const string NATIVE_DLL = @"support\tools\lib\host_transport64.dll";
+
+            // Methods
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTCloseHandle")]
+            public static extern int CloseHandle(int src, int handle);
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTCreateFile", CharSet = CharSet.Ansi)]
+            public static extern int CreateFile(int src, string comname);
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTGetReceiveSize")]
+            public static extern int GetReceiveSize(int src, int hFile);
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTReadFile", SetLastError = true)]
+            public static extern int ReadFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead);
+            [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTWriteFile", SetLastError = true)]
+            public static extern int WriteFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten);
+        }
+
+        public static int CloseHandle(int src, int handle)
+        {
+            return ((IntPtr.Size == 8) ? ScePsmHT64.CloseHandle(src, handle) : ScePsmHT32.CloseHandle(src, handle));
+        }
+
+        public static int CreateFile(int src, string comname)
+        {
+            return ((IntPtr.Size == 8) ? ScePsmHT64.CreateFile(src, comname) : ScePsmHT32.CreateFile(src, comname));
+        }
+
+        public static int GetReceiveSize(int src, int hFile)
+        {
+            return ((IntPtr.Size == 8) ? ScePsmHT64.GetReceiveSize(src, hFile) : ScePsmHT32.GetReceiveSize(src, hFile));
+        }
+
+        public static int ReadFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead)
+        {
+            return ((IntPtr.Size == 8) ? ScePsmHT64.ReadFile(src, hFile, lpBuffer, nNumberOfBytesToRead, out lpNumberOfBytesRead) : ScePsmHT32.ReadFile(src, hFile, lpBuffer, nNumberOfBytesToRead, out lpNumberOfBytesRead));
+        }
+
+        public static int WriteFile(int src, int hFile, IntPtr lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten)
+        {
+            return ((IntPtr.Size == 8) ? ScePsmHT64.WriteFile(src, hFile, lpBuffer, nNumberOfBytesToWrite, out lpNumberOfBytesWritten) : ScePsmHT32.WriteFile(src, hFile, lpBuffer, nNumberOfBytesToWrite, out lpNumberOfBytesWritten));
+        }
 
         public static string GetVitaPortWithSerial(string serial)
         {
@@ -169,8 +217,8 @@ namespace VitaDefiler.PSM
         private static scePsmDevVersion _scePsmDevVersion;
         private const int APPLICATION_NUM = 100;
         private const int DEVICE_NUM = 8;
-        private const string dll32 = @"lib\psm_device32.dll";
-        private const string dll64 = @"lib\psm_device64.dll";
+        private const string dll32 = @"support\tools\lib\psm_device32.dll";
+        private const string dll64 = @"support\tools\lib\psm_device64.dll";
         private static int mDeviceNum = 0;
         private static ScePsmDevice[] mDevices = new ScePsmDevice[8];
         private static Mutex mInfoMutex = new Mutex();
