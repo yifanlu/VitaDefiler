@@ -45,6 +45,9 @@ namespace VitaDefiler
                 process.Kill();
             }
 
+            // set environment variables
+            Environment.SetEnvironmentVariable("SCE_PSM_SDK", Path.Combine(Environment.CurrentDirectory, "support"));
+
             // initialize the modules
             List<IModule> mods = new List<IModule>();
             Scripting scripting = null;
