@@ -49,6 +49,7 @@ namespace VitaDefiler.Modules
                     Console.Error.WriteLine("Error pulling file.");
                     return false;
                 }
+                Console.Error.WriteLine("Receiving {0}", dstpath);
                 using (FileStream fs = File.OpenWrite(dstpath))
                 {
                     fs.Write(data, 0, data.Length);
@@ -64,6 +65,7 @@ namespace VitaDefiler.Modules
 
         public bool Push(Device dev, string srcpath, string dstpath)
         {
+            Console.Error.WriteLine("Sending {0}", srcpath);
             try
             {
                 byte[] data = File.ReadAllBytes(srcpath);
