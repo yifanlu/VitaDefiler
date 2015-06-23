@@ -227,9 +227,45 @@ namespace VitaDefiler
                 {
                     string[] entry = line.Trim().Split(new char[]{' '}, 2);
                     bool handled = false;
+                    string[] entryargs = entry.Length > 1 ? entry[1].Split(' ') : new string[] { };
+                    int start = -1;
+                    int idx = 0;
+                    for (int i = 0; i < entryargs.Length; i++)
+                    {
+                        if (start > -1)
+                        {
+                            if (entryargs[i].EndsWith("\""))
+                            {
+                                entryargs[start] = entryargs[start] + ' ' + entryargs[i].Substring(0, entryargs[i].Length - 1);
+                                start = -1;
+                            }
+                            else
+                            {
+                                entryargs[start] = entryargs[start] + ' ' + entryargs[i];
+                            }
+                        }
+                        else if (entryargs[i].StartsWith("\""))
+                        {
+                            start = idx++;
+                            if (entryargs[i].EndsWith("\""))
+                            {
+                                entryargs[start] = entryargs[i].Substring(1, entryargs[i].Length - 2);
+                                start = -1;
+                            }
+                            else
+                            {
+                                entryargs[start] = entryargs[i].Substring(1);
+                            }
+                        }
+                        else
+                        {
+                            entryargs[idx++] = entryargs[i];
+                        }
+                    }
+                    Array.Resize<string>(ref entryargs, idx);
                     foreach (IModule mod in mods)
                     {
-                        if (handled = mod.Run(dev, entry[0], entry.Length > 1 ? entry[1].Split(' ') : new string[] { }))
+                        if (handled = mod.Run(dev, entry[0], entryargs))
                         {
 #if DEBUG
                             Console.Error.WriteLine("Command handled by {0}", mod.GetType());

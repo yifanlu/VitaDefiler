@@ -80,7 +80,7 @@ namespace VitaDefiler.Modules
                         }
                         else
                         {
-                            script = script.Replace(token, args[idx - 1]);
+                            script = script.Replace(token, '"' + args[idx - 1] + '"');
                         }
                     }
                 }
