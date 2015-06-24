@@ -38,11 +38,14 @@ namespace VitaDefiler
 #endif
 
             // kill PSM
-            Process[] potential = Process.GetProcessesByName("PsmDevice");
+            Process[] potential = Process.GetProcesses();
             foreach (Process process in potential)
             {
-                Console.WriteLine("Killing PsmDevice process {0}", process.Id);
-                process.Kill();
+                if (process.ProcessName.StartsWith("PsmDevice"))
+                {
+                    Console.WriteLine("Killing PsmDevice process {0}", process.Id);
+                    process.Kill();
+                }
             }
 
             // set environment variables

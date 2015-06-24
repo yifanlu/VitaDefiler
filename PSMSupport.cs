@@ -190,6 +190,10 @@ namespace VitaDefiler.PSM
 
     internal delegate int scePsmDevVersion([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
 
+    internal delegate int scePsmDevGetAgentVersion([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPArray)] byte[] psm_devagent, [In, Out, MarshalAs(UnmanagedType.LPArray)] byte[] host_transport);
+    
+    internal delegate int scePsmDevLaunchUnity([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appName, int argnum, [MarshalAs(UnmanagedType.LPArray)] string[] argstr);
+
     internal static class PSMFunctions
     {
         // Fields
@@ -215,6 +219,9 @@ namespace VitaDefiler.PSM
         private static scePsmDevSetConsoleWrite _scePsmDevSetConsoleWrite;
         private static scePsmDevUninstall _scePsmDevUninstall;
         private static scePsmDevVersion _scePsmDevVersion;
+        private static scePsmDevGetAgentVersion _scePsmDevGetAgentVersion;
+        private static scePsmDevLaunchUnity _scePsmDevLaunchUnity;
+
         private const int APPLICATION_NUM = 100;
         private const int DEVICE_NUM = 8;
         private const string dll32 = @"support\tools\lib\psm_device32.dll";
@@ -391,6 +398,8 @@ namespace VitaDefiler.PSM
                 _scePsmDevResponseEndPsmApp = new scePsmDevResponseEndPsmApp(scePsmDevResponseEndPsmApp32);
                 _scePsmDevVersion = new scePsmDevVersion(scePsmDevVersion32);
                 _scePsmDevGetErrStr = new scePsmDevGetErrStr(scePsmDevGetErrStr32);
+                _scePsmDevGetAgentVersion = new scePsmDevGetAgentVersion(scePsmDevGetAgentVersion32);
+                _scePsmDevLaunchUnity = new scePsmDevLaunchUnity(scePsmDevLaunchUnity32);
             }
             else
             {
@@ -416,6 +425,8 @@ namespace VitaDefiler.PSM
                 _scePsmDevResponseEndPsmApp = new scePsmDevResponseEndPsmApp(scePsmDevResponseEndPsmApp64);
                 _scePsmDevVersion = new scePsmDevVersion(scePsmDevVersion64);
                 _scePsmDevGetErrStr = new scePsmDevGetErrStr(scePsmDevGetErrStr64);
+                _scePsmDevGetAgentVersion = new scePsmDevGetAgentVersion(scePsmDevGetAgentVersion64);
+                _scePsmDevLaunchUnity = new scePsmDevLaunchUnity(scePsmDevLaunchUnity64);
             }
         }
 
@@ -590,6 +601,15 @@ namespace VitaDefiler.PSM
         public static extern int scePsmDevVersion32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
         [DllImport(dll64, EntryPoint = "scePsmDevVersion")]
         public static extern int scePsmDevVersion64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid);
+        [DllImport(dll32, EntryPoint = "scePsmDevGetAgentVersion")]
+        public static extern int scePsmDevGetAgentVersion32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPArray)] byte[] psm_devagent, [In, Out, MarshalAs(UnmanagedType.LPArray)] byte[] host_transport);
+        [DllImport(dll64, EntryPoint = "scePsmDevGetAgentVersion")]
+        public static extern int scePsmDevGetAgentVersion64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [In, Out, MarshalAs(UnmanagedType.LPArray)] byte[] psm_devagent, [In, Out, MarshalAs(UnmanagedType.LPArray)] byte[] host_transport);
+        [DllImport(dll32, EntryPoint = "scePsmDevLaunchUnity")]
+        public static extern int scePsmDevLaunchUnity32([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appName, int argnum, [MarshalAs(UnmanagedType.LPArray)] string[] argstr);
+        [DllImport(dll64, EntryPoint = "scePsmDevLaunchUnity")]
+        public static extern int scePsmDevLaunchUnity64([In, MarshalAs(UnmanagedType.LPStruct)] Guid deviceGuid, [MarshalAs(UnmanagedType.LPStr)] string appName, int argnum, [MarshalAs(UnmanagedType.LPArray)] string[] argstr);
+
         public static int SetAdbExePath(string path)
         {
             return _scePsmDevSetAdbExePath(path);
@@ -638,6 +658,31 @@ namespace VitaDefiler.PSM
                 Console.WriteLine("Error. scePsmDevVersion(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
+        }
+
+        public static int GetAgentVersion(Guid deviceGuid, ref string psm_devagent_verstr, ref string host_transport_verstr)
+        {
+            byte[] buffer = new byte[0x20];
+            byte[] buffer2 = new byte[0x20];
+            int code = _scePsmDevGetAgentVersion(deviceGuid, buffer, buffer2);
+            if (code < 0)
+            {
+                Console.WriteLine("Error. scePsmDevGetAgentVersion: {0}", GetErrStr(code));
+                return code;
+            }
+            psm_devagent_verstr = Encoding.ASCII.GetString(buffer).TrimEnd(new char[1]);
+            host_transport_verstr = Encoding.ASCII.GetString(buffer2).TrimEnd(new char[1]);
+            return code;
+        }
+
+        public static int LaunchUnity(Guid deviceGuid, string appName, int argnum, string[] argstr)
+        {
+            int code = _scePsmDevLaunchUnity(deviceGuid, appName, argnum, argstr);
+            if (code < 0)
+            {
+                Console.WriteLine("Error. scePsmDevLaunchUnity: {0}", GetErrStr(code));
+            }
+            return code;
         }
 
         // Nested Types

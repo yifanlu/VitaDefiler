@@ -547,7 +547,18 @@ namespace VitaDefiler.PSM
             this.handle = devId;
 
             // request version or other calls will fail
+#if USE_UNITY
+            string devagentver = null;
+            string hosttransportver = null;
+            if ((ret = PSMFunctions.GetAgentVersion(this.handle, ref devagentver, ref hosttransportver)) != 0)
+            {
+                Console.WriteLine("Error getting version: 0x{0:X}", ret);
+                throw new IOException("Cannot connect to Vita.");
+            }
+            Console.WriteLine("Connected agent version: {0}, transport version: {1}", devagentver, hosttransportver);
+#else
             PSMFunctions.Version(this.handle);
+#endif
 
 #if USE_APP_KEY
             byte[] buffer = File.ReadAllBytes("kdev.p12");
@@ -577,11 +588,19 @@ namespace VitaDefiler.PSM
             PSMFunctions.SetConsoleWrite(this.handle, Marshal.GetFunctionPointerForDelegate(callback));
 
             Console.WriteLine("Launching {0}.", name);
+#if USE_UNITY
+            if ((ret = PSMFunctions.LaunchUnity(this.handle, name, 0, new string[]{})) != 0)
+            {
+                Console.WriteLine("Error running application: 0x{0:X}", ret);
+                throw new IOException("Cannot connect to Vita.");
+            }
+#else
             if ((ret = PSMFunctions.Launch(this.handle, name, true, false, false, false, "")) != 0)
             {
                 Console.WriteLine("Error running application: 0x{0:X}", ret);
                 throw new IOException("Cannot connect to Vita.");
             }
+#endif
 
             Console.WriteLine("Connecting debugger.");
             string port = TransportFunctions.GetVitaPortWithSerial(serial);
