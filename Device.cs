@@ -16,16 +16,16 @@ namespace VitaDefiler
         public List<Variable> Vars { get; private set; }
         public Dictionary<string, uint> Locals { get; private set; }
         public Network Network { get; private set; }
-        public USB USB { get; private set; }
+        public Exploit Exploit { get; private set; }
         public uint LastReturn { get; set; }
         public string Script { get; set; }
 
-        public Device(USB usb, Network net)
+        public Device(Exploit exploit, Network net)
         {
             Vars = new List<Variable>();
             Locals = new Dictionary<string, uint>();
             Network = net;
-            USB = usb;
+            Exploit = exploit;
         }
 
         public int CreateVariable(uint addr, uint size, bool isCode)

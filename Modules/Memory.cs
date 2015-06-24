@@ -114,7 +114,7 @@ namespace VitaDefiler.Modules
                 return;
             }
             FileStream fs = file == null ? null : File.OpenWrite(file);
-            dev.USB.StartDump(addr, length, fs);
+            dev.Exploit.StartDump(addr, length, fs);
             if (fs != null)
             {
                 fs.Close();

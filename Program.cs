@@ -4,6 +4,7 @@ using System.Threading;
 using System.Diagnostics;
 using System.IO;
 using VitaDefiler.Modules;
+using VitaDefiler.PSM;
 
 namespace VitaDefiler
 {
@@ -68,11 +69,15 @@ namespace VitaDefiler
             }
 
             // set up usb
-            USB usb = new USB(args[0], null);
+#if USE_UNITY
+            Exploit exploit = new Exploit(ConnectionFinder.GetConnectionForWireless, args[0], null);
+#else
+            Exploit exploit = new Exploit(ConnectionFinder.GetConnectionForUSB, args[0], null);
+#endif
             ManualResetEvent doneinit = new ManualResetEvent(false);
             string host = string.Empty;
             int port = 0;
-            usb.Connect((text) =>
+            exploit.Connect((text) =>
             {
                 if (text.StartsWith("XXVCMDXX:"))
                 {
@@ -109,14 +114,14 @@ namespace VitaDefiler
             uint logline_func;
             uint libkernel_anchor;
             Console.Error.WriteLine("Defeating ASLR...");
-            usb.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3], out funcs[4], out libkernel_anchor);
+            exploit.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3], out funcs[4], out libkernel_anchor);
 #if !NO_ESCALATE_PRIVILEGES
             // exploit vita
             Console.Error.WriteLine("Escalating privileges...");
-            usb.EscalatePrivilege(images_hash_ptr);
+            exploit.EscalatePrivilege(images_hash_ptr);
             //Thread tt = new Thread(() =>
             //{
-                usb.StartNetworkListener();
+                exploit.StartNetworkListener();
                 Console.Error.WriteLine("Vita exploited.");
             //});
                 //tt.Start();
@@ -131,7 +136,7 @@ namespace VitaDefiler
             else
             {
                 Console.Error.WriteLine("Failed to create net listener. Exiting.");
-                usb.Disconnect();
+                exploit.Disconnect();
                 return;
             }
 
@@ -151,7 +156,7 @@ namespace VitaDefiler
             }
 
             // set up RPC context
-            Device dev = new Device(usb, net);
+            Device dev = new Device(exploit, net);
 
             // get logger
             net.RunCommand(Command.GetLogger, out resp);
@@ -285,7 +290,7 @@ namespace VitaDefiler
             }
 
             // cleanup
-            usb.Disconnect();
+            exploit.Disconnect();
         }
     }
 }
