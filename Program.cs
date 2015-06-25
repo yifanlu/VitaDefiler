@@ -69,63 +69,32 @@ namespace VitaDefiler
             }
 
             // set up usb
+            Exploit exploit;
+            string host;
+            int port;
 #if USE_UNITY
-            Exploit exploit = new Exploit(ConnectionFinder.GetConnectionForWireless, args[0], null);
+            ExploitFinder.CreateFromWireless(args[0], out exploit, out host, out port);
 #else
-            Exploit exploit = new Exploit(ConnectionFinder.GetConnectionForUSB, args[0], null);
+            ExploitFinder.CreateFromUSB(args[0], out exploit, out host, out port);
 #endif
-            ManualResetEvent doneinit = new ManualResetEvent(false);
-            string host = string.Empty;
-            int port = 0;
-            exploit.Connect((text) =>
-            {
-                if (text.StartsWith("XXVCMDXX:"))
-                {
-#if DEBUG
-                    Console.Error.WriteLine("[Vita] {0}", text);
-#endif
-                    string[] cmd = text.Trim().Split(':');
-                    switch (cmd[1])
-                    {
-                        case "IP":
-                            host = cmd[2];
-                            port = Int32.Parse(cmd[3]);
-                            Console.Error.WriteLine("Found Vita network at {0}:{1}", host, port);
-                            break;
-                        case "DONE":
-                            Console.Error.WriteLine("Vita done initializing");
-                            doneinit.Set();
-                            break;
-                        default:
-                            Console.Error.WriteLine("Unrecognized startup command");
-                            break;
-                    }
-                }
-                else
-                {
-                    Console.Error.WriteLine("[Vita] {0}", text);
-                }
-            });
-            Console.Error.WriteLine("Waiting for app to finish launching...");
-            doneinit.WaitOne();
 
+#if !NO_EXPLOIT
             uint images_hash_ptr;
             uint[] funcs = new uint[5];
             uint logline_func;
             uint libkernel_anchor;
             Console.Error.WriteLine("Defeating ASLR...");
             exploit.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3], out funcs[4], out libkernel_anchor);
-#if !NO_ESCALATE_PRIVILEGES
             // exploit vita
             Console.Error.WriteLine("Escalating privileges...");
             exploit.EscalatePrivilege(images_hash_ptr);
+#endif
             //Thread tt = new Thread(() =>
             //{
                 exploit.StartNetworkListener();
                 Console.Error.WriteLine("Vita exploited.");
             //});
                 //tt.Start();
-#endif
 
             // set up network
             Network net = new Network();
@@ -148,16 +117,19 @@ namespace VitaDefiler
                 Console.Error.WriteLine("Enabling display output");
                 net.RunCommand(Command.EnableGUI, out resp);
             }
-
+            
+#if !NO_EXPLOIT
             // pass in function pointers
             if (net.RunCommand(Command.SetFuncPtrs, funcs, out resp) == Command.Error)
             {
                 Console.Error.WriteLine("ERROR setting function pointers!");
             }
+#endif
 
             // set up RPC context
             Device dev = new Device(exploit, net);
-
+            
+#if !NO_EXPLOIT
             // get logger
             net.RunCommand(Command.GetLogger, out resp);
             logline_func = BitConverter.ToUInt32(resp, 0);
@@ -170,6 +142,7 @@ namespace VitaDefiler
             dev.CreateLocal("pss_code_mem_flush_icache", funcs[4]);
             dev.CreateLocal("logline", logline_func);
             dev.CreateLocal("libkernel_anchor", libkernel_anchor);
+#endif
 
             // run script if needed
             if ((!enablegui && args.Length >= 3) || (enablegui && args.Length >= 2))

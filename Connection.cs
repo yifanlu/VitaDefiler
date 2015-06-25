@@ -7,6 +7,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace VitaDefiler.PSM
 {
@@ -219,16 +220,7 @@ namespace VitaDefiler.PSM
             return new VitaUSBConnection(port);
         }
 
-        private static Connection GetConnectionForPlayer(string playerString)
-        {
-            PlayerInfo player = PlayerInfo.Parse(playerString);
-            Console.WriteLine("Found: {0}", player);
-            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            sock.Connect(player.m_IPEndPoint.Address, (int)player.m_DebuggerPort);
-            return new TcpConnection(sock);
-        }
-
-        public static Connection GetConnectionForWireless(string serial)
+        public static PlayerInfo GetPlayerForWireless()
         {
             Console.WriteLine("Waiting for Vita connection...");
             List<Socket> multicastSockets = InitSockets();
@@ -241,10 +233,123 @@ namespace VitaDefiler.PSM
                         byte[] buffer = new byte[0x400];
                         int count = socket.Receive(buffer);
                         string playerString = Encoding.ASCII.GetString(buffer, 0, count);
-                        return GetConnectionForPlayer(playerString);
+                        return PlayerInfo.Parse(playerString);
                     }
                 }
             }
+        }
+    }
+
+    class ExploitFinder
+    {
+        private static readonly int VITADEFILER_PORT = 4445;
+
+        public static void CreateFromUSB(string package, out Exploit exploit, out string host, out int port)
+        {
+            exploit = new Exploit(ConnectionFinder.GetConnectionForUSB, package, null);
+            ManualResetEvent doneinit = new ManualResetEvent(false);
+            string _host = string.Empty;
+            int _port = 0;
+            exploit.Connect((text) =>
+            {
+                if (text.StartsWith("XXVCMDXX:"))
+                {
+#if DEBUG
+                    Console.Error.WriteLine("[Vita] {0}", text);
+#endif
+                    string[] cmd = text.Trim().Split(':');
+                    switch (cmd[1])
+                    {
+                        case "IP":
+                            _host = cmd[2];
+                            _port = Int32.Parse(cmd[3]);
+                            Console.Error.WriteLine("Found Vita network at {0}:{1}", _host, _port);
+                            break;
+                        case "DONE":
+                            Console.Error.WriteLine("Vita done initializing");
+                            doneinit.Set();
+                            break;
+                        default:
+                            Console.Error.WriteLine("Unrecognized startup command");
+                            break;
+                    }
+                }
+                else
+                {
+                    Console.Error.WriteLine("[Vita] {0}", text);
+                }
+            });
+            Console.Error.WriteLine("Waiting for app to finish launching...");
+            doneinit.WaitOne();
+            host = _host;
+            port = _port;
+        }
+
+        public static void CreateFromWireless(string package, out Exploit exploit, out string host, out int port)
+        {
+            string _host = string.Empty;
+            int _port = 0;
+            ManualResetEvent doneinit = new ManualResetEvent(false);
+            exploit = new Exploit((serial) =>
+            {
+                ConnectionFinder.PlayerInfo info = ConnectionFinder.GetPlayerForWireless();
+                Console.WriteLine("Found: {0}", info);
+                Socket debugsock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                Socket logsock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                try
+                {
+                    debugsock.Connect(info.m_IPEndPoint.Address, (int)info.m_DebuggerPort);
+                    logsock.Connect(info.m_IPEndPoint);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Unable to connect to {0}:{1}", info.m_IPEndPoint.Address, info.m_DebuggerPort);
+                    throw;
+                }
+
+                // get network connection
+                _host = info.m_IPEndPoint.Address.ToString();
+                _port = VITADEFILER_PORT;
+
+                // connect to console output
+                (new Thread(() =>
+                {
+                    string line;
+                    using (StreamReader read = new StreamReader(new NetworkStream(logsock)))
+                    {
+                        while ((line = read.ReadLine()) != null)
+                        {
+                            if (line.Contains("kernel avail main"))
+                            {
+                                continue; // skip unity logs
+                            }
+                            /*
+                            if (line.StartsWith("\t"))
+                            {
+                                continue; // skip unity stack traces
+                            }
+                             */
+                            Console.Error.WriteLine("[Vita] {0}", line);
+                        }
+                    }
+                })).Start();
+
+                // ready for network connection
+                doneinit.Set();
+
+                // return debug connection
+                return new TcpConnection(debugsock);
+            }, package, null);
+            exploit.Connect((text) =>
+            {
+                Console.WriteLine("[Vita] {0}", text);
+            });
+            Console.Error.WriteLine("Waiting for network connection...");
+            doneinit.WaitOne();
+            // suspend
+            exploit.SuspendVM();
+            host = _host;
+            port = _port;
         }
     }
 }
