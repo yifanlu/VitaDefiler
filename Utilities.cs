@@ -249,7 +249,7 @@ namespace VitaDefiler
                     type = DecodeResult.INSTRUCTION_BRANCH;
                     return 0;
                 }
-                // Bits 24-4 should be 100101111111111110001, 0x12FFF3 for BLX
+                // Bits 24-4 should be 100101111111111110011, 0x12FFF3 for BLX
                 else if ((cur_inst << 7) >> 11 == 0x12FFF3)
                 {
                     type = DecodeResult.INSTRUCTION_BRANCH;
