@@ -26,6 +26,7 @@ namespace VitaDefiler
                 Console.Error.WriteLine("cannot find package file");
                 return;
             }
+
             if (args.Length >= 2 && args[1] == "-nodisp")
             {
                 enablegui = false;
@@ -42,7 +43,7 @@ namespace VitaDefiler
             Process[] potential = Process.GetProcesses();
             foreach (Process process in potential)
             {
-                if (process.ProcessName.StartsWith("PsmDevice"))
+                if (process.ProcessName.StartsWith("PsmDevice") || process.ProcessName.StartsWith("PsmDeviceUnity"))
                 {
                     Console.WriteLine("Killing PsmDevice process {0}", process.Id);
                     process.Kill();
@@ -72,7 +73,7 @@ namespace VitaDefiler
             Exploit exploit;
             string host;
             int port;
-#if USE_UNITY
+#if NO_USB
             ExploitFinder.CreateFromWireless(args[0], out exploit, out host, out port);
 #else
             ExploitFinder.CreateFromUSB(args[0], out exploit, out host, out port);
@@ -86,13 +87,21 @@ namespace VitaDefiler
             Console.Error.WriteLine("Defeating ASLR...");
             exploit.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3], out funcs[4], out libkernel_anchor);
             // exploit vita
+
             Console.Error.WriteLine("Escalating privileges...");
             exploit.EscalatePrivilege(images_hash_ptr);
 #endif
+
+#if USE_UNITY
+            exploit.ResumeVM(); // The network listener is already listening in Unity.
+#else
+            exploit.StartNetworkListener();
+            Console.Error.WriteLine("Vita exploited.");
+#endif
+
+
             //Thread tt = new Thread(() =>
             //{
-                exploit.StartNetworkListener();
-                Console.Error.WriteLine("Vita exploited.");
             //});
                 //tt.Start();
 

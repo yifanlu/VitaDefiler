@@ -10,7 +10,7 @@ namespace VitaDefilerClient
         
         public static void Start ()
         {
-			Debug.Log("Vita Defiler Client started");
+			LogLine("Vita Defiler Client started");
 			
 			CommandListener.InitializeNetwork ();
 			typeof(NativeFunctions).GetMethods(); // take care of lazy init
@@ -24,7 +24,8 @@ namespace VitaDefilerClient
 		
 		public static void LogLine (string format, params object[] args)
 		{
-			Debug.Log(string.Format(format, args));
+			string line = string.Format(format, args);
+			VitaDefilerClientUnity.LogLine(line);
 		}
     }
 }
