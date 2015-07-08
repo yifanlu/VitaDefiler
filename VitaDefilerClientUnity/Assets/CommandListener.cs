@@ -72,10 +72,6 @@ namespace VitaDefilerClient
 			listener.Start();
 			Console.WriteLine("XXVCMDXX:IP:{0}:{1}", ipaddr, LISTEN_PORT);
 			AppMain.LogLine("Started listening at {0}:{1}", ipaddr, LISTEN_PORT);
-
-			// This can be called right away because AcceptSocket will wait until VitaDefiler
-			// connects to it, which is after privileges have been escalated.
-			StartListener();
 		}
 		
 		[SecuritySafeCritical]

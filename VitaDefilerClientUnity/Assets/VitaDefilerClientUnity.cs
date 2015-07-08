@@ -18,6 +18,17 @@ public class VitaDefilerClientUnity : MonoBehaviour {
 	void Start () {
 		logtext = GameObject.Find ("log_text").guiText;
 		VitaDefilerClient.AppMain.Start ();
+
+		StartCoroutine(StartListenerDelayed());
+	}
+
+	private IEnumerator StartListenerDelayed()
+	{
+		yield return new WaitForSeconds(4.0f); // This needs to happen to prevent the "VM not suspended" error from happening.
+
+		// This can be called right away because AcceptSocket will wait until VitaDefiler
+		// connects to it, which is after privileges have been escalated.
+		VitaDefilerClient.CommandListener.StartListener();
 	}
 
 	public void Log(string logString, string stackTrace, LogType type)
