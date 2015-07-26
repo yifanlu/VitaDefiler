@@ -321,7 +321,7 @@ namespace VitaDefiler.PSM
                         {
                             while ((line = read.ReadLine()) != null)
                             {
-                                if (line.Contains("kernel avail main"))
+                                if (line.Contains("kernel avail main") || line.Contains("Not in scene!"))
                                 {
                                     continue; // skip unity logs
                                 }
