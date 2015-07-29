@@ -250,7 +250,7 @@ namespace VitaDefiler.PSM
             ManualResetEvent doneinit = new ManualResetEvent(false);
             string _host = string.Empty;
             int _port = 0;
-            exploit.Connect((text) =>
+            exploit.Connect(true, (text) =>
             {
                 if (text.StartsWith("XXVCMDXX:"))
                 {
@@ -354,7 +354,7 @@ namespace VitaDefiler.PSM
                 // return debug connection
                 return new TcpConnection(debugsock);
             }, package, null);
-            exploit.Connect((text) =>
+            exploit.Connect(false, (text) =>
             {
                 Console.WriteLine("[Vita] {0}", text);
             });
