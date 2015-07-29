@@ -14,23 +14,44 @@ namespace VitaDefiler
 
         static void Main(string[] args)
         {
-            bool enablegui = true;
-
             if (args.Length < 1)
             {
                 Console.Error.WriteLine("usage: VitaDefiler.exe package [-nodisp] [script args]\n    package is path to PSM package\n    nodisp starts client without logging to screen\n    script is the script to run\n    args are arguments for the script");
                 return;
             }
-            if (!File.Exists(args[0]))
+
+            int scriptIndex = 0;
+            bool enablegui = true;
+            string package = null;
+            bool useUsb = false;
+
+#if USE_UNITY
+            foreach (string arg in args)
+            {
+                switch (arg)
+                {
+                    case "-nodisp":
+                        ++scriptIndex;
+                        enablegui = false;
+                        break;
+
+                    case "-install":
+                        scriptIndex += 2;
+                        package = args[0];
+                        break;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(package) && !File.Exists(package))
             {
                 Console.Error.WriteLine("cannot find package file");
                 return;
             }
 
-            if (args.Length >= 2 && args[1] == "-nodisp")
-            {
-                enablegui = false;
-            }
+#else
+            useUsb = true;
+#endif
+
 #if USE_APP_KEY
             if (!File.Exists(args[1]))
             {
@@ -73,10 +94,11 @@ namespace VitaDefiler
             Exploit exploit;
             string host;
             int port;
-#if NO_USB
-            ExploitFinder.CreateFromWireless(args[0], out exploit, out host, out port);
+            
+#if USE_UNITY
+                ExploitFinder.CreateFromWireless(package, out exploit, out host, out port);
 #else
-            ExploitFinder.CreateFromUSB(args[0], out exploit, out host, out port);
+                ExploitFinder.CreateFromUSB(package, out exploit, out host, out port);
 #endif
 
 #if !NO_EXPLOIT
@@ -154,22 +176,12 @@ namespace VitaDefiler
 #endif
 
             // run script if needed
-            if ((!enablegui && args.Length >= 3) || (enablegui && args.Length >= 2))
+            if (args.Length > scriptIndex)
             {
-                string script;
-                string[] scriptargs;
-                if (enablegui)
-                {
-                    script = args[1];
-                    scriptargs = new string[args.Length - 2];
-                    Array.Copy(args, 2, scriptargs, 0, args.Length - 2);
-                }
-                else
-                {
-                    script = args[2];
-                    scriptargs = new string[args.Length - 3];
-                    Array.Copy(args, 3, scriptargs, 0, args.Length - 3);
-                }
+                string script = args[scriptIndex];
+                string[] scriptargs = new string[args.Length - scriptIndex - 1];
+                Array.Copy(args, scriptIndex + 1, scriptargs, 0, args.Length - scriptIndex - 1);
+
                 scripting.ParseScript(dev, script, scriptargs);
             }
 
