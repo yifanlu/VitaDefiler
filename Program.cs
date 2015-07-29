@@ -14,12 +14,6 @@ namespace VitaDefiler
 
         static void Main(string[] args)
         {
-            if (args.Length < 1)
-            {
-                Console.Error.WriteLine("usage: VitaDefiler.exe package [-nodisp] [script args]\n    package is path to PSM package\n    nodisp starts client without logging to screen\n    script is the script to run\n    args are arguments for the script");
-                return;
-            }
-
             int scriptIndex = 0;
             bool enablegui = true;
             string package = null;
