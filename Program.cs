@@ -17,9 +17,7 @@ namespace VitaDefiler
             int scriptIndex = 0;
             bool enablegui = true;
             string package = null;
-            bool useUsb = false;
 
-#if USE_UNITY
             foreach (string arg in args)
             {
                 switch (arg)
@@ -41,10 +39,6 @@ namespace VitaDefiler
                 Console.Error.WriteLine("cannot find package file");
                 return;
             }
-
-#else
-            useUsb = true;
-#endif
 
 #if USE_APP_KEY
             if (!File.Exists(args[1]))
