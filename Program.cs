@@ -54,14 +54,17 @@ namespace VitaDefiler
             }
 #endif
 
-            // kill PSM
-            Process[] potential = Process.GetProcesses();
-            foreach (Process process in potential)
+            if (Environment.OSVersion.VersionString.Contains("Microsoft Windows"))
             {
-                if (process.ProcessName.StartsWith("PsmDevice") || process.ProcessName.StartsWith("PsmDeviceUnity"))
+                // kill PSM
+                Process[] potential = Process.GetProcesses();
+                foreach (Process process in potential)
                 {
-                    Console.WriteLine("Killing PsmDevice process {0}", process.Id);
-                    process.Kill();
+                    if (process.ProcessName.StartsWith("PsmDevice") || process.ProcessName.StartsWith("PsmDeviceUnity"))
+                    {
+                        Console.WriteLine("Killing PsmDevice process {0}", process.Id);
+                        process.Kill();
+                    }
                 }
             }
 
