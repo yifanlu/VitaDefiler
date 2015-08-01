@@ -222,7 +222,7 @@ namespace VitaDefiler.PSM
 
         public static PlayerInfo GetPlayerForWireless()
         {
-            Console.WriteLine("Waiting for Vita connection...");
+            Console.WriteLine("Waiting for Vita connection on the network...");
             List<Socket> multicastSockets = InitSockets();
             while (true)
             {
