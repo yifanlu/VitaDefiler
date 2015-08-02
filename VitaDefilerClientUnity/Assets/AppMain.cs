@@ -7,7 +7,7 @@ namespace VitaDefilerClient
     {
 		public static IntPtr src = new IntPtr(0);
 		public static byte[] dest = new byte[0x100];
-        
+
         public static void Start ()
         {
 			LogLine("Vita Defiler Client started");
