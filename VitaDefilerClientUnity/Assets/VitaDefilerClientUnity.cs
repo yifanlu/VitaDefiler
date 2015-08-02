@@ -3,7 +3,7 @@ using System.Collections;
 
 public class VitaDefilerClientUnity : MonoBehaviour {
 	private static readonly int LOG_SIZE = 20;
-	private string log;
+	private static string log;
 	private GUIText logtext;
 
 	public VitaDefilerClientUnity () {
@@ -18,18 +18,17 @@ public class VitaDefilerClientUnity : MonoBehaviour {
 	void Start () {
 		logtext = GameObject.Find ("log_text").guiText;
 		VitaDefilerClient.AppMain.Start ();
-	}
-	
-	// Update is called once per frame
-	void Update () {
+
+		StartCoroutine(StartListenerDelayed());
 	}
 
-	void OnEnable () {
-		Application.RegisterLogCallbackThreaded (Log);
-	}
+	private IEnumerator StartListenerDelayed()
+	{
+		yield return new WaitForSeconds(4.5f); // This needs to happen to prevent the "VM not suspended" error from happening.
 
-	void OnDisable () {
-		Application.RegisterLogCallbackThreaded (null);
+		// This can be called right away because AcceptSocket will wait until VitaDefiler
+		// connects to it, which is after privileges have been escalated.
+		VitaDefilerClient.CommandListener.StartListener();
 	}
 
 	public void Log(string logString, string stackTrace, LogType type)
@@ -37,20 +36,25 @@ public class VitaDefilerClientUnity : MonoBehaviour {
 		LogLine (logString);
 	}
 	
-	void LogLine (string format, params object[] args)
+	public static void LogLine (string line)
 	{
-		string line = string.Format(format, args);
-		int lines = log.Length - log.Replace("\n", "").Length;
+		Debug.Log(line);
+		
+		// This code causes printf to crash after a couple dozen calls.
+		/*int lines = log.Length - log.Replace("\n", "").Length;
 		if (lines >= LOG_SIZE)
 		{
 			log = log.Substring(log.IndexOf('\n')+1);
 		}
-		log += line + "\n";
+		log += line + "\n";*/
 	}
 
 	[System.Diagnostics.Conditional("UNITY_EDITOR")]
-	void OnGui() {
-		print ("logging");
-		logtext.text = log;
+	void FixedUpdate() {
+		//print ("logging");
+		if (logtext != null)
+		{
+			logtext.text = log;
+		}
 	}
 }

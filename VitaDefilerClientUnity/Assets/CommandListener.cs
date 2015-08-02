@@ -77,7 +77,6 @@ namespace VitaDefilerClient
 		[SecuritySafeCritical]
 		public static void StartListener()
 		{
-			AppMain.LogLine("Privilege escalation successful!");
 			Thread thread = new Thread(Listen);
 			thread.Start();
 		}

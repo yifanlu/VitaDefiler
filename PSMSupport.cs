@@ -65,7 +65,11 @@ namespace VitaDefiler.PSM
         private static class ScePsmHT32
         {
             // Fields
-            private const string NATIVE_DLL = @"support\tools\lib\host_transport32.dll";
+#if USE_UNITY
+            private const string NATIVE_DLL = @"support\unity\tools\lib\host_transport32.dll";
+#else
+            private const string NATIVE_DLL = @"support\psm\tools\lib\host_transport32.dll";
+#endif
 
             // Methods
             [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTCloseHandle")]
@@ -83,7 +87,11 @@ namespace VitaDefiler.PSM
         private static class ScePsmHT64
         {
             // Fields
-            private const string NATIVE_DLL = @"support\tools\lib\host_transport64.dll";
+#if USE_UNITY
+            private const string NATIVE_DLL = @"support\unity\tools\lib\host_transport64.dll";
+#else
+            private const string NATIVE_DLL = @"support\psm\tools\lib\host_transport64.dll";
+#endif
 
             // Methods
             [DllImport(NATIVE_DLL, EntryPoint = "scePsmHTCloseHandle")]
@@ -224,8 +232,13 @@ namespace VitaDefiler.PSM
 
         private const int APPLICATION_NUM = 100;
         private const int DEVICE_NUM = 8;
-        private const string dll32 = @"support\tools\lib\psm_device32.dll";
-        private const string dll64 = @"support\tools\lib\psm_device64.dll";
+#if USE_UNITY
+        private const string dll32 = @"support\unity\tools\lib\psm_device32.dll";
+        private const string dll64 = @"support\unity\tools\lib\psm_device64.dll";
+#else
+        private const string dll32 = @"support\psm\tools\lib\psm_device32.dll";
+        private const string dll64 = @"support\psm\tools\lib\psm_device64.dll";
+#endif
         private static int mDeviceNum = 0;
         private static ScePsmDevice[] mDevices = new ScePsmDevice[8];
         private static Mutex mInfoMutex = new Mutex();

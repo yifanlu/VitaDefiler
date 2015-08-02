@@ -222,7 +222,7 @@ namespace VitaDefiler.PSM
 
         public static PlayerInfo GetPlayerForWireless()
         {
-            Console.WriteLine("Waiting for Vita connection...");
+            Console.WriteLine("Waiting for Vita connection on the network...");
             List<Socket> multicastSockets = InitSockets();
             while (true)
             {
@@ -250,7 +250,7 @@ namespace VitaDefiler.PSM
             ManualResetEvent doneinit = new ManualResetEvent(false);
             string _host = string.Empty;
             int _port = 0;
-            exploit.Connect((text) =>
+            exploit.Connect(true, (text) =>
             {
                 if (text.StartsWith("XXVCMDXX:"))
                 {
@@ -317,19 +317,33 @@ namespace VitaDefiler.PSM
                     string line;
                     using (StreamReader read = new StreamReader(new NetworkStream(logsock)))
                     {
-                        while ((line = read.ReadLine()) != null)
+                        try
                         {
-                            if (line.Contains("kernel avail main"))
+                            while ((line = read.ReadLine()) != null)
                             {
-                                continue; // skip unity logs
+                                if (line.Contains("kernel avail main") || line.Contains("Not in scene!"))
+                                {
+                                    continue; // skip unity logs
+                                }
+                                /*
+                                if (line.StartsWith("\t"))
+                                {
+                                    continue; // skip unity stack traces
+                                }
+                                 */
+
+                                int index = line.LastIndexOf('\0'); // Unity output has some crazy garbage in front of it, so get rid of that.
+                                if (index >= 0)
+                                {
+                                    line = line.Substring(index);
+                                }
+
+                                Console.Error.WriteLine("[Vita] {0}", line);
                             }
-                            /*
-                            if (line.StartsWith("\t"))
-                            {
-                                continue; // skip unity stack traces
-                            }
-                             */
-                            Console.Error.WriteLine("[Vita] {0}", line);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.ToString()); // We want to know what went wrong.
                         }
                     }
                 })).Start();
@@ -340,7 +354,7 @@ namespace VitaDefiler.PSM
                 // return debug connection
                 return new TcpConnection(debugsock);
             }, package, null);
-            exploit.Connect((text) =>
+            exploit.Connect(false, (text) =>
             {
                 Console.WriteLine("[Vita] {0}", text);
             });
