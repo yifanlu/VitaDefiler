@@ -224,8 +224,13 @@ namespace VitaDefiler.PSM
 
         private const int APPLICATION_NUM = 100;
         private const int DEVICE_NUM = 8;
+#if USE_UNITY
+        private const string dll32 = @"support\tools\lib_unity\psm_device32.dll";
+        private const string dll64 = @"support\tools\lib_unity\psm_device64.dll";
+#else
         private const string dll32 = @"support\tools\lib\psm_device32.dll";
         private const string dll64 = @"support\tools\lib\psm_device64.dll";
+#endif
         private static int mDeviceNum = 0;
         private static ScePsmDevice[] mDevices = new ScePsmDevice[8];
         private static Mutex mInfoMutex = new Mutex();

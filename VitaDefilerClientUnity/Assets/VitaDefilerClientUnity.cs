@@ -3,7 +3,7 @@ using System.Collections;
 
 public class VitaDefilerClientUnity : MonoBehaviour {
 	private static readonly int LOG_SIZE = 20;
-	private string log;
+	private static string log;
 	private GUIText logtext;
 
 	public VitaDefilerClientUnity () {
@@ -19,10 +19,6 @@ public class VitaDefilerClientUnity : MonoBehaviour {
 		logtext = GameObject.Find ("log_text").guiText;
 		VitaDefilerClient.AppMain.Start ();
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	}
 
 	void OnEnable () {
 		Application.RegisterLogCallbackThreaded (Log);
@@ -37,9 +33,8 @@ public class VitaDefilerClientUnity : MonoBehaviour {
 		LogLine (logString);
 	}
 	
-	void LogLine (string format, params object[] args)
+	public static void LogLine (string line)
 	{
-		string line = string.Format(format, args);
 		int lines = log.Length - log.Replace("\n", "").Length;
 		if (lines >= LOG_SIZE)
 		{
@@ -49,8 +44,8 @@ public class VitaDefilerClientUnity : MonoBehaviour {
 	}
 
 	[System.Diagnostics.Conditional("UNITY_EDITOR")]
-	void OnGui() {
-		print ("logging");
+	void FixedUpdate() {
+		//print ("logging");
 		logtext.text = log;
 	}
 }
