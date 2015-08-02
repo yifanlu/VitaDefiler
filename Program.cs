@@ -14,22 +14,32 @@ namespace VitaDefiler
 
         static void Main(string[] args)
         {
+            int scriptIndex = 0;
             bool enablegui = true;
+            string package = null;
 
-            if (args.Length < 1)
+            foreach (string arg in args)
             {
-                Console.Error.WriteLine("usage: VitaDefiler.exe package [-nodisp] [script args]\n    package is path to PSM package\n    nodisp starts client without logging to screen\n    script is the script to run\n    args are arguments for the script");
-                return;
+                switch (arg)
+                {
+                    case "-nodisp":
+                        ++scriptIndex;
+                        enablegui = false;
+                        break;
+
+                    case "-install":
+                        scriptIndex += 2;
+                        package = args[0];
+                        break;
+                }
             }
-            if (!File.Exists(args[0]))
+
+            if (!string.IsNullOrEmpty(package) && !File.Exists(package))
             {
                 Console.Error.WriteLine("cannot find package file");
                 return;
             }
-            if (args.Length >= 2 && args[1] == "-nodisp")
-            {
-                enablegui = false;
-            }
+
 #if USE_APP_KEY
             if (!File.Exists(args[1]))
             {
@@ -38,19 +48,22 @@ namespace VitaDefiler
             }
 #endif
 
-            // kill PSM
-            Process[] potential = Process.GetProcesses();
-            foreach (Process process in potential)
+            if (Environment.OSVersion.VersionString.Contains("Microsoft Windows"))
             {
-                if (process.ProcessName.StartsWith("PsmDevice"))
+                // kill PSM
+                Process[] potential = Process.GetProcesses();
+                foreach (Process process in potential)
                 {
-                    Console.WriteLine("Killing PsmDevice process {0}", process.Id);
-                    process.Kill();
+                    if (process.ProcessName.StartsWith("PsmDevice") || process.ProcessName.StartsWith("PsmDeviceUnity"))
+                    {
+                        Console.WriteLine("Killing PsmDevice process {0}", process.Id);
+                        process.Kill();
+                    }
                 }
             }
 
             // set environment variables
-            Environment.SetEnvironmentVariable("SCE_PSM_SDK", Path.Combine(Environment.CurrentDirectory, "support"));
+            Environment.SetEnvironmentVariable("SCE_PSM_SDK", Path.Combine(Environment.CurrentDirectory, "support/psm"));
 
             // initialize the modules
             List<IModule> mods = new List<IModule>();
@@ -72,10 +85,11 @@ namespace VitaDefiler
             Exploit exploit;
             string host;
             int port;
+            
 #if USE_UNITY
-            ExploitFinder.CreateFromWireless(args[0], out exploit, out host, out port);
+                ExploitFinder.CreateFromWireless(package, out exploit, out host, out port);
 #else
-            ExploitFinder.CreateFromUSB(args[0], out exploit, out host, out port);
+                ExploitFinder.CreateFromUSB(package, out exploit, out host, out port);
 #endif
 
 #if !NO_EXPLOIT
@@ -86,13 +100,21 @@ namespace VitaDefiler
             Console.Error.WriteLine("Defeating ASLR...");
             exploit.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3], out funcs[4], out libkernel_anchor);
             // exploit vita
+
             Console.Error.WriteLine("Escalating privileges...");
             exploit.EscalatePrivilege(images_hash_ptr);
 #endif
+
+#if USE_UNITY
+            exploit.ResumeVM(); // The network listener is already listening in Unity.
+#else
+            exploit.StartNetworkListener();
+            Console.Error.WriteLine("Vita exploited.");
+#endif
+
+
             //Thread tt = new Thread(() =>
             //{
-                exploit.StartNetworkListener();
-                Console.Error.WriteLine("Vita exploited.");
             //});
                 //tt.Start();
 
@@ -145,22 +167,12 @@ namespace VitaDefiler
 #endif
 
             // run script if needed
-            if ((!enablegui && args.Length >= 3) || (enablegui && args.Length >= 2))
+            if (args.Length > scriptIndex)
             {
-                string script;
-                string[] scriptargs;
-                if (enablegui)
-                {
-                    script = args[1];
-                    scriptargs = new string[args.Length - 2];
-                    Array.Copy(args, 2, scriptargs, 0, args.Length - 2);
-                }
-                else
-                {
-                    script = args[2];
-                    scriptargs = new string[args.Length - 3];
-                    Array.Copy(args, 3, scriptargs, 0, args.Length - 3);
-                }
+                string script = args[scriptIndex];
+                string[] scriptargs = new string[args.Length - scriptIndex - 1];
+                Array.Copy(args, scriptIndex + 1, scriptargs, 0, args.Length - scriptIndex - 1);
+
                 scripting.ParseScript(dev, script, scriptargs);
             }
 
