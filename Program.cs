@@ -12,6 +12,8 @@ namespace VitaDefiler
     {
         static readonly Type[] Mods = {typeof(Code), typeof(General), typeof(Memory), typeof(FileIO), typeof(Scripting)};
 
+        public static bool exitAfterInstall = false;
+
         static void Main(string[] args)
         {
             int scriptIndex = 0;
@@ -30,9 +32,24 @@ namespace VitaDefiler
                     case "-install":
                         scriptIndex += 2;
                         package = args[0];
+                        exitAfterInstall = true;
                         break;
                 }
             }
+
+#if !USE_UNITY
+            if (args.Length < 1)
+            {
+                Console.Error.WriteLine("usage: VitaDefiler.exe package [-nodisp] [script args]\n    package is path to PSM package\n    nodisp starts client without logging to screen\n    script is the script to run\n    args are arguments for the script");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(package))
+            {
+                package = args[0];
+                ++scriptIndex;
+            }
+#endif
 
             if (!string.IsNullOrEmpty(package) && !File.Exists(package))
             {
