@@ -66,7 +66,8 @@ namespace PsmSigner
         public static bool NeedsEncryption(string path)
         {
             string ext = Path.GetExtension(path);
-            return (ext == ".cgx") || (ext == ".exe") || (ext == ".dll");
+            string file = Path.GetFileName(path);
+            return (ext == ".cgx") || (ext == ".exe") || (ext == ".dll") || (file == "unity_builtin_extra");
         }
 
         public static bool EncryptFiles(string inpath, string outpath, string pubkey, string appkey)

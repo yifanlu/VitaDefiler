@@ -7,7 +7,11 @@ namespace Sce.Psm
     {
         // Fields
         public const int DeviceMax = 8;
-        private const string NATIVE_DLL = @"tools\lib\psm_device32.dll";
+#if USE_UNITY
+        private const string NATIVE_DLL = @"unity\tools\lib\psm_device32.dll";
+#else
+        private const string NATIVE_DLL = @"psm\tools\lib\psm_device32.dll";
+#endif
 
         // Methods
         [DllImport(NATIVE_DLL, EntryPoint = "scePsmDevCreatePackage", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
@@ -18,7 +22,11 @@ namespace Sce.Psm
     {
         // Fields
         public const int DeviceMax = 8;
-        private const string NATIVE_DLL = @"tools\lib\psm_device64.dll";
+#if USE_UNITY
+        private const string NATIVE_DLL = @"unity\tools\lib\psm_device64.dll";
+#else
+        private const string NATIVE_DLL = @"psm\tools\lib\psm_device64.dll";
+#endif
 
         // Methods
         [DllImport(NATIVE_DLL, EntryPoint = "scePsmDevCreatePackage", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
