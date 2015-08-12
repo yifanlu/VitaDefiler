@@ -52,25 +52,7 @@ namespace VitaDefiler
             catch (Exception ex)
             {
                 Console.Error.WriteLine("Error connecting to Vita network: {0}", ex.Message);
-
-				try
-				{
-					IPHostEntry ipHostInfo = Dns.GetHostEntry(host);
-					IPAddress ipAddress = ipHostInfo.AddressList[0];
-					IPEndPoint remoteEP = new IPEndPoint(ipAddress,port);
-
-					_sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-					_sock.Connect(remoteEP);
-					_sock.SendTimeout = 20000;
-					_sock.ReceiveTimeout = 20000;
-					return true;
-				}
-				catch (Exception ex2)
-				{
-					Console.Error.WriteLine("Error connecting to Vita network: {0}", ex2.Message);
-
-					return false;
-				}
+				return false;
             }
         }
 
