@@ -31,24 +31,6 @@ public class VitaDefilerClientUnity : MonoBehaviour {
 		VitaDefilerClient.CommandListener.StartListener();
 	}
 
-	public void Log(string logString, string stackTrace, LogType type)
-	{
-		LogLine (logString);
-	}
-	
-	public static void LogLine (string line)
-	{
-		Debug.Log(line);
-		
-		// This code causes printf to crash after a couple dozen calls.
-		/*int lines = log.Length - log.Replace("\n", "").Length;
-		if (lines >= LOG_SIZE)
-		{
-			log = log.Substring(log.IndexOf('\n')+1);
-		}
-		log += line + "\n";*/
-	}
-
 	[System.Diagnostics.Conditional("UNITY_EDITOR")]
 	void FixedUpdate() {
 		//print ("logging");

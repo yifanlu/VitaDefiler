@@ -25,7 +25,8 @@ namespace VitaDefilerClient
 		public static void LogLine (string format, params object[] args)
 		{
 			string line = string.Format(format, args);
-			VitaDefilerClientUnity.LogLine(line);
+			UnityEngine.Debug.Log(line);
+			Console.WriteLine("{0}", line);
 		}
     }
 }

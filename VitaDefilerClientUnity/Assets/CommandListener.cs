@@ -51,8 +51,8 @@ namespace VitaDefilerClient
 		
 		private static int LogLine([MarshalAs(UnmanagedType.LPStr)]string line)
 		{
-			AppMain.LogLine("{0}", line);
-			Console.WriteLine("{0}", line);
+			UnityEngine.Debug.Log(line);
+			Console.WriteLine(line);
 			return 0;
 		}
 		
