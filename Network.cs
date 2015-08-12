@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+
 
 namespace VitaDefiler
 {
@@ -34,6 +36,7 @@ namespace VitaDefiler
         public bool Connect(string host, int port)
         {
             Disconnect(); // disconnect previous connection
+            Thread.Sleep(2000);
             try
             {
                 IPHostEntry ipHostInfo = Dns.GetHostEntry(host);
@@ -49,7 +52,25 @@ namespace VitaDefiler
             catch (Exception ex)
             {
                 Console.Error.WriteLine("Error connecting to Vita network: {0}", ex.Message);
-                return false;
+
+				try
+				{
+					IPHostEntry ipHostInfo = Dns.GetHostEntry(host);
+					IPAddress ipAddress = ipHostInfo.AddressList[0];
+					IPEndPoint remoteEP = new IPEndPoint(ipAddress,port);
+
+					_sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+					_sock.Connect(remoteEP);
+					_sock.SendTimeout = 20000;
+					_sock.ReceiveTimeout = 20000;
+					return true;
+				}
+				catch (Exception ex2)
+				{
+					Console.Error.WriteLine("Error connecting to Vita network: {0}", ex2.Message);
+
+					return false;
+				}
             }
         }
 
