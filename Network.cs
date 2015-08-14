@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace VitaDefiler
 {
@@ -34,6 +35,7 @@ namespace VitaDefiler
         public bool Connect(string host, int port)
         {
             Disconnect(); // disconnect previous connection
+	    Thread.Sleep(2000); // Workaround for connection refused with mono on mac/linux
             try
             {
                 IPHostEntry ipHostInfo = Dns.GetHostEntry(host);
