@@ -210,6 +210,12 @@ namespace VitaDefilerClient
 							args[i] = BitConverter.ToInt32(data, i * sizeof(int));
 						}
 						AppMain.LogLine("Executing 0x{0:x} with {1} args", args[0], argc-1);
+
+						// By calling the Garbage Collector Collect here, any native code that is executed that calls
+						// into managed code (such as LogLine) will have less issues with crashing when doing so.
+						GC.Collect();
+						GC.WaitForPendingFinalizers();
+
 						int ret = (int)NativeFunctions.Execute(new IntPtr(args[0]), args[1], args[2], args[3], args[4]);
 						resp = BitConverter.GetBytes(ret);
 						AppMain.LogLine("Code returned: 0x{0:x}", ret);
