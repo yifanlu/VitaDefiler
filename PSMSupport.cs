@@ -4,7 +4,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Text;
+#if !USE_ANDROID
 using System.Management;
+#endif
 using System.Runtime.InteropServices;
 using System.Threading;
 using Mono.Cecil.Metadata;
@@ -133,6 +135,7 @@ namespace VitaDefiler.PSM
 
         public static string GetVitaPortWithSerial(string serial)
         {
+#if !USE_ANDROID
             ManagementClass class2 = new ManagementClass("Win32_SerialPort");
             string vitaDebugPnpDeviceID = @"USB\VID_054C&PID_069B\" + serial;
             foreach (ManagementBaseObject obj2 in class2.GetInstances())
@@ -150,6 +153,7 @@ namespace VitaDefiler.PSM
                     }
                 }
             }
+#endif
             return null;
         }
     }

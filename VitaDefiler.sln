@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VitaDefiler", "VitaDefiler.csproj", "{2F83E7C6-0B90-4E07-B161-C449E7AFF9F0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndroidDefiler", "..\..\Projects\AndroidDefiler\AndroidDefiler\AndroidDefiler.csproj", "{5123F21B-52D7-4E5C-BFDB-79B25E0A6D88}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -13,6 +15,10 @@ Global
 		{2F83E7C6-0B90-4E07-B161-C449E7AFF9F0}.Debug|x86.Build.0 = Debug|x86
 		{2F83E7C6-0B90-4E07-B161-C449E7AFF9F0}.Release|x86.ActiveCfg = Release|x86
 		{2F83E7C6-0B90-4E07-B161-C449E7AFF9F0}.Release|x86.Build.0 = Release|x86
+		{5123F21B-52D7-4E5C-BFDB-79B25E0A6D88}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5123F21B-52D7-4E5C-BFDB-79B25E0A6D88}.Debug|x86.Build.0 = Debug|Any CPU
+		{5123F21B-52D7-4E5C-BFDB-79B25E0A6D88}.Release|x86.ActiveCfg = Release|Any CPU
+		{5123F21B-52D7-4E5C-BFDB-79B25E0A6D88}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
