@@ -35,7 +35,13 @@ namespace VitaDefiler
         public bool Connect(string host, int port)
         {
             Disconnect(); // disconnect previous connection
-	    Thread.Sleep(2000); // Workaround for connection refused with mono on mac/linux
+
+            // We don't want to make Windows users wait needlessly.
+            if (!Environment.OSVersion.VersionString.Contains("Microsoft Windows"))
+            {
+                Thread.Sleep(2000); // Workaround for connection refused with mono on mac/linux
+            }
+
             try
             {
                 IPHostEntry ipHostInfo = Dns.GetHostEntry(host);
