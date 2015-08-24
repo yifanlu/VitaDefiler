@@ -14,7 +14,7 @@ namespace VitaDefiler
 
         public static bool exitAfterInstall = false;
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             int scriptIndex = 0;
             bool enablegui = true;
@@ -65,6 +65,7 @@ namespace VitaDefiler
             }
 #endif
 
+#if !USE_ANDROID
             if (Environment.OSVersion.VersionString.Contains("Microsoft Windows"))
             {
                 // kill PSM
@@ -81,6 +82,7 @@ namespace VitaDefiler
 
             // set environment variables
             Environment.SetEnvironmentVariable("SCE_PSM_SDK", Path.Combine(Environment.CurrentDirectory, "support/psm"));
+#endif
 
             // initialize the modules
             List<IModule> mods = new List<IModule>();

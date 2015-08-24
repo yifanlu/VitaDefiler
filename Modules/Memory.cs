@@ -128,6 +128,16 @@ namespace VitaDefiler.Modules
                 Console.Error.WriteLine("Ignoring invalid write request. Are your params correct?");
                 return;
             }
+
+#if USE_ANDROID
+
+			if(file!=null){
+			string sdcard = Android.OS.Environment.ExternalStorageDirectory.Path;
+			file = Path.Combine(sdcard,file);
+			}
+
+#endif
+
             byte[] resp;
             if (file == null || !File.Exists(file))
             {
