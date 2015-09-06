@@ -211,7 +211,14 @@ namespace VitaDefiler.PSM
 
         public static Connection GetConnectionForUSB(string serial)
         {
-            string port = TransportFunctions.GetVitaPortWithSerial(serial);
+            string port;
+
+            if (string.IsNullOrEmpty(serial))
+            {
+                Console.WriteLine("USB device not connected.");
+                throw new NotSupportedException("Must call ConnectUSB() first!");
+            }
+            port = TransportFunctions.GetVitaPortWithSerial(serial);
             if (port == null)
             {
                 Console.WriteLine("Cannot find serial port for {0}", serial);
@@ -246,10 +253,18 @@ namespace VitaDefiler.PSM
 
         public static void CreateFromUSB(string package, out Exploit exploit, out string host, out int port)
         {
-            exploit = new Exploit(ConnectionFinder.GetConnectionForUSB, package, null);
+            exploit = new Exploit(ConnectionFinder.GetConnectionForUSB);
             ManualResetEvent doneinit = new ManualResetEvent(false);
             string _host = string.Empty;
             int _port = 0;
+
+            // install package if we have to
+            if (!string.IsNullOrEmpty(package))
+            {
+                exploit.PackageInstallUSB(package);
+            }
+
+            // run exploit
             exploit.Connect(true, (text) =>
             {
                 if (text.StartsWith("XXVCMDXX:"))
@@ -353,7 +368,12 @@ namespace VitaDefiler.PSM
 
                 // return debug connection
                 return new TcpConnection(debugsock);
-            }, package, null);
+            });
+
+            // install package if we have to
+            exploit.PackageInstallUSB(package);
+
+            // run exploit
             exploit.Connect(false, (text) =>
             {
                 Console.WriteLine("[Vita] {0}", text);

@@ -1,84 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Diagnostics;
 using System.IO;
 using VitaDefiler.Modules;
 using VitaDefiler.PSM;
 
 namespace VitaDefiler
 {
-    class Program
+    public class Defiler
     {
         static readonly Type[] Mods = {typeof(Code), typeof(General), typeof(Memory), typeof(FileIO), typeof(Scripting)};
 
-        public static bool exitAfterInstall = false;
-
-        static void Main(string[] args)
+        public static bool Run(string package = null, bool enableGui = true, string script = null, string[] args = null)
         {
-            int scriptIndex = 0;
-            bool enablegui = true;
-            string package = null;
-
-            foreach (string arg in args)
-            {
-                switch (arg)
-                {
-                    case "-nodisp":
-                        ++scriptIndex;
-                        enablegui = false;
-                        break;
-
-                    case "-install":
-                        scriptIndex += 2;
-                        package = args[0];
-                        exitAfterInstall = true;
-                        break;
-                }
-            }
-
-#if !USE_UNITY
-            if (args.Length < 1)
-            {
-                Console.Error.WriteLine("usage: VitaDefiler.exe package [-nodisp] [script args]\n    package is path to PSM package\n    nodisp starts client without logging to screen\n    script is the script to run\n    args are arguments for the script");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(package))
-            {
-                package = args[0];
-                ++scriptIndex;
-            }
-#endif
-
-            if (!string.IsNullOrEmpty(package) && !File.Exists(package))
-            {
-                Console.Error.WriteLine("cannot find package file");
-                return;
-            }
-
-#if USE_APP_KEY
-            if (!File.Exists(args[1]))
-            {
-                Console.Error.WriteLine("cannot find key file");
-                return;
-            }
-#endif
-
-            if (Environment.OSVersion.VersionString.Contains("Microsoft Windows"))
-            {
-                // kill PSM
-                Process[] potential = Process.GetProcesses();
-                foreach (Process process in potential)
-                {
-                    if (process.ProcessName.StartsWith("PsmDevice") || process.ProcessName.StartsWith("PsmDeviceUnity"))
-                    {
-                        Console.WriteLine("Killing PsmDevice process {0}", process.Id);
-                        process.Kill();
-                    }
-                }
-            }
-
             // set environment variables
             Environment.SetEnvironmentVariable("SCE_PSM_SDK", Path.Combine(Environment.CurrentDirectory, "support/psm"));
 
@@ -104,9 +38,9 @@ namespace VitaDefiler
             int port;
             
 #if USE_UNITY
-                ExploitFinder.CreateFromWireless(package, out exploit, out host, out port);
+            ExploitFinder.CreateFromWireless(package, out exploit, out host, out port);
 #else
-                ExploitFinder.CreateFromUSB(package, out exploit, out host, out port);
+            ExploitFinder.CreateFromUSB(package, out exploit, out host, out port);
 #endif
 
 #if !NO_EXPLOIT
@@ -145,13 +79,13 @@ namespace VitaDefiler
             {
                 Console.Error.WriteLine("Failed to create net listener. Exiting.");
                 exploit.Disconnect();
-                return;
+                return false;
             }
 
             byte[] resp;
 
             // enable gui
-            if (enablegui)
+            if (enableGui)
             {
                 Console.Error.WriteLine("Enabling display output");
                 net.RunCommand(Command.EnableGUI, out resp);
@@ -182,15 +116,10 @@ namespace VitaDefiler
             dev.CreateLocal("logline", logline_func);
             dev.CreateLocal("libkernel_anchor", libkernel_anchor);
 #endif
-
-            // run script if needed
-            if (args.Length > scriptIndex)
+            // run script
+            if (script != null && args != null)
             {
-                string script = args[scriptIndex];
-                string[] scriptargs = new string[args.Length - scriptIndex - 1];
-                Array.Copy(args, scriptIndex + 1, scriptargs, 0, args.Length - scriptIndex - 1);
-
-                scripting.ParseScript(dev, script, scriptargs);
+                scripting.ParseScript(dev, script, args);
             }
 
             // wait for commands
@@ -293,6 +222,7 @@ namespace VitaDefiler
 
             // cleanup
             exploit.Disconnect();
+            return true;
         }
     }
 }
