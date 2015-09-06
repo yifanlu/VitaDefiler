@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -51,7 +52,7 @@ namespace VitaDefiler
                             }
                             else
                             {
-                                Console.Error.WriteLine("Invalid variable {0}", self.Substring(1));
+                                Defiler.ErrLine("Invalid variable {0}", self.Substring(1));
                             }
                             v.Data = (uint)(v.Data + offset);
                             break;
@@ -67,7 +68,7 @@ namespace VitaDefiler
                 }
             }
 #if DEBUG
-            Console.Error.WriteLine("Parsed '{0}' to '0x{1:X}' with size {2}", self, v.Data, v.Size);
+            Defiler.LogLine("Parsed '{0}' to '0x{1:X}' with size {2}", self, v.Data, v.Size);
 #endif
             return v;
         }
@@ -112,7 +113,7 @@ namespace VitaDefiler
                 case "uint":
                 case "float":
 #if DEBUG
-                    Console.Error.WriteLine("Parsed '{0}' to {1}", self, 4);
+                    Defiler.LogLine("Parsed '{0}' to {1}", self, 4);
 #endif
                     return 4;
                 case "int16":
@@ -120,7 +121,7 @@ namespace VitaDefiler
                 case "short":
                 case "ushort":
 #if DEBUG
-                    Console.Error.WriteLine("Parsed '{0}' to {1}", self, 2);
+                    Defiler.LogLine("Parsed '{0}' to {1}", self, 2);
 #endif
                     return 2;
                 case "int8":
@@ -128,7 +129,7 @@ namespace VitaDefiler
                 case "char":
                 case "byte":
 #if DEBUG
-                    Console.Error.WriteLine("Parsed '{0}' to {1}", self, 1);
+                    Defiler.LogLine("Parsed '{0}' to {1}", self, 1);
 #endif
                     return 1;
                 default:
@@ -138,42 +139,44 @@ namespace VitaDefiler
 
         public static void PrintHexDump(this byte[] data, uint size, uint num)
         {
+            StringWriter buf = new StringWriter();
             uint i = 0, j = 0, k = 0, l = 0;
             for (l = size / num, k = 1; l > 0; l /= num, k++)
                 ; // find number of zeros to prepend line number
             while (j < size)
             {
                 // line number
-                Console.Write("{0:X" + k + "}: ", j);
+                buf.Write("{0:X" + k + "}: ", j);
                 // hex value
                 for (i = 0; i < num; i++, j++)
                 {
                     if (j < size)
                     {
-                        Console.Write("{0:X2} ", data[j]);
+                        buf.Write("{0:X2} ", data[j]);
                     }
                     else
                     { // print blank spaces
-                        Console.Write("   ");
+                        buf.Write("   ");
                     }
                 }
                 // seperator
-                Console.Write("| ");
+                buf.Write("| ");
                 // ascii value
                 for (i = num; i > 0; i--)
                 {
                     if (j - i < size)
                     {
-                        Console.Write("{0}", data[j - i] < 32 || data[j - i] > 126 ? "." : Char.ToString((char)data[j - i])); // print only visible characters
+                        buf.Write("{0}", data[j - i] < 32 || data[j - i] > 126 ? "." : Char.ToString((char)data[j - i])); // print only visible characters
                     }
                     else
                     {
-                        Console.Write(" ");
+                        buf.Write(" ");
                     }
                 }
                 // new line
-                Console.WriteLine();
+                buf.WriteLine();
             }
+            Defiler.LogLine(buf.ToString());
         }
 
         private static bool BitSet(uint i, int b)

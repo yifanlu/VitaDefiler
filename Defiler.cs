@@ -10,27 +10,37 @@ namespace VitaDefiler
     public class Defiler
     {
         static readonly Type[] Mods = {typeof(Code), typeof(General), typeof(Memory), typeof(FileIO), typeof(Scripting)};
+        static TextWriter _logstream = Console.Out;
+        static TextWriter _errstream = Console.Error;
+        static TextWriter _msgstream = Console.Out;
 
-        public static bool Run(string package = null, bool enableGui = true, string script = null, string[] args = null)
+        public static void LogLine(string format, params object[] parameters)
+        {
+            _logstream.WriteLine(string.Format(format, parameters));
+        }
+
+        public static void ErrLine(string format, params object[] parameters)
+        {
+            _errstream.WriteLine(string.Format(format, parameters));
+        }
+
+        public static void MsgLine(string format, params object[] parameters)
+        {
+            _msgstream.WriteLine(string.Format(format, parameters));
+        }
+
+        public static void SetLogger(TextWriter log, TextWriter err, TextWriter msg)
+        {
+            _logstream = log;
+            _errstream = err;
+            _msgstream = msg;
+        }
+
+        public static DefilerDevice Setup(string package = null, bool enableGui = true)
         {
             // set environment variables
             Environment.SetEnvironmentVariable("SCE_PSM_SDK", Path.Combine(Environment.CurrentDirectory, "support/psm"));
 
-            // initialize the modules
-            List<IModule> mods = new List<IModule>();
-            Scripting scripting = null;
-            foreach (Type t in Mods)
-            {
-                if (typeof(IModule).IsAssignableFrom(t))
-                {
-                    IModule mod = (IModule)Activator.CreateInstance(t);
-                    if (t == typeof(Scripting))
-                    {
-                        scripting = mod as Scripting;
-                    }
-                    mods.Add(mod);
-                }
-            }
 
             // set up usb
             Exploit exploit;
@@ -48,11 +58,11 @@ namespace VitaDefiler
             uint[] funcs = new uint[5];
             uint logline_func;
             uint libkernel_anchor;
-            Console.Error.WriteLine("Defeating ASLR...");
+            Defiler.MsgLine("Defeating ASLR...");
             exploit.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3], out funcs[4], out libkernel_anchor);
             // exploit vita
 
-            Console.Error.WriteLine("Escalating privileges...");
+            Defiler.MsgLine("Escalating privileges...");
             exploit.EscalatePrivilege(images_hash_ptr);
 #endif
 
@@ -60,7 +70,7 @@ namespace VitaDefiler
             exploit.ResumeVM(); // The network listener is already listening in Unity.
 #else
             exploit.StartNetworkListener();
-            Console.Error.WriteLine("Vita exploited.");
+            Defiler.MsgLine("Vita exploited.");
 #endif
 
 
@@ -73,13 +83,13 @@ namespace VitaDefiler
             Network net = new Network();
             if (net.Connect(host, port))
             {
-                Console.Error.WriteLine("Connected to Vita network");
+                Defiler.MsgLine("Connected to Vita network");
             }
             else
             {
-                Console.Error.WriteLine("Failed to create net listener. Exiting.");
+                Defiler.MsgLine("Failed to create net listener. Exiting.");
                 exploit.Disconnect();
-                return false;
+                return null;
             }
 
             byte[] resp;
@@ -87,7 +97,7 @@ namespace VitaDefiler
             // enable gui
             if (enableGui)
             {
-                Console.Error.WriteLine("Enabling display output");
+                Defiler.MsgLine("Enabling display output");
                 net.RunCommand(Command.EnableGUI, out resp);
             }
             
@@ -95,7 +105,7 @@ namespace VitaDefiler
             // pass in function pointers
             if (net.RunCommand(Command.SetFuncPtrs, funcs, out resp) == Command.Error)
             {
-                Console.Error.WriteLine("ERROR setting function pointers!");
+                Defiler.ErrLine("ERROR setting function pointers!");
             }
 #endif
 
@@ -116,6 +126,35 @@ namespace VitaDefiler
             dev.CreateLocal("logline", logline_func);
             dev.CreateLocal("libkernel_anchor", libkernel_anchor);
 #endif
+            return dev;
+        }
+
+        public static void Exit(DefilerDevice device)
+        {
+            Device dev = device as Device;
+            dev.Network.RunCommand(Command.Exit);
+            dev.Exploit.Disconnect();
+        }
+
+        public static void CommandRunner(DefilerDevice device, string script = null, string[] args = null)
+        {
+            Device dev = device as Device;
+            // initialize the modules
+            List<IModule> mods = new List<IModule>();
+            Scripting scripting = null;
+            foreach (Type t in Mods)
+            {
+                if (typeof(IModule).IsAssignableFrom(t))
+                {
+                    IModule mod = (IModule)Activator.CreateInstance(t);
+                    if (t == typeof(Scripting))
+                    {
+                        scripting = mod as Scripting;
+                    }
+                    mods.Add(mod);
+                }
+            }
+
             // run script
             if (script != null && args != null)
             {
@@ -123,14 +162,14 @@ namespace VitaDefiler
             }
 
             // wait for commands
-            Console.Error.WriteLine("Ready for commands. Type 'help' for a listing.");
+            Console.WriteLine("Ready for commands. Type 'help' for a listing.");
             StringReader reader = null;
             string line = null;
             while (true)
             {
                 if (dev.Script != null)
                 {
-                    Console.Error.WriteLine("Running script...");
+                    Console.WriteLine("Running script...");
                     reader = new StringReader(dev.Script);
                     dev.Script = null;
                 }
@@ -138,7 +177,7 @@ namespace VitaDefiler
                 {
                     line = reader.ReadLine();
 #if DEBUG
-                    Console.WriteLine("> {0}", line);
+                    Defiler.LogLine("> {0}", line);
 #endif
                 }
                 else
@@ -150,7 +189,7 @@ namespace VitaDefiler
                 {
                     if (reader == null)
                     {
-                        Console.Error.WriteLine("Enter a command, or 'help' for a list of commands.");
+                        Console.WriteLine("Enter a command, or 'help' for a list of commands.");
                     }
                     else
                     {
@@ -159,12 +198,11 @@ namespace VitaDefiler
                 }
                 else if (line == "exit")
                 {
-                    net.RunCommand(Command.Exit);
                     break;
                 }
                 else
                 {
-                    string[] entry = line.Trim().Split(new char[]{' '}, 2);
+                    string[] entry = line.Trim().Split(new char[] { ' ' }, 2);
                     bool handled = false;
                     string[] entryargs = entry.Length > 1 ? entry[1].Split(' ') : new string[] { };
                     int start = -1;
@@ -207,7 +245,7 @@ namespace VitaDefiler
                         if (handled = mod.Run(dev, entry[0], entryargs))
                         {
 #if DEBUG
-                            Console.Error.WriteLine("Command handled by {0}", mod.GetType());
+                            Console.WriteLine("Command handled by {0}", mod.GetType());
 #endif
                             break;
                         }
@@ -219,10 +257,6 @@ namespace VitaDefiler
                     }
                 }
             }
-
-            // cleanup
-            exploit.Disconnect();
-            return true;
         }
     }
 }

@@ -11,7 +11,11 @@ namespace VitaDefiler
         public bool IsCode;
     }
 
-    class Device
+    public interface DefilerDevice
+    {
+    }
+
+    class Device : DefilerDevice
     {
         public List<Variable> Vars { get; private set; }
         public Dictionary<string, uint> Locals { get; private set; }
@@ -46,7 +50,7 @@ namespace VitaDefiler
                 }
             }
             Vars.Add(var);
-            Console.Error.WriteLine("${0} = 0x{1:X}", i, addr);
+            Defiler.LogLine("${0} = 0x{1:X}", i, addr);
             return i;
         }
 
@@ -58,7 +62,7 @@ namespace VitaDefiler
                 {
                     Vars[i] = Variable.Null;
 #if DEBUG
-                    Console.Error.WriteLine("Deleted variable ${0}", i);
+                    Defiler.LogLine("Deleted variable ${0}", i);
 #endif
                 }
             }
@@ -77,7 +81,7 @@ namespace VitaDefiler
         public void CreateLocal(string name, uint data)
         {
             Locals[name] = data;
-            Console.Error.WriteLine("%{0} = 0x{1:X}", name, data);
+            Defiler.LogLine("%{0} = 0x{1:X}", name, data);
         }
     }
 }

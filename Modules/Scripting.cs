@@ -75,7 +75,7 @@ namespace VitaDefiler.Modules
                         }
                         if (idx-1 >= args.Length)
                         {
-                            Console.Error.WriteLine("Not enough arguments specified: {0}, have {1} args", token, args.Length);
+                            Defiler.ErrLine("Not enough arguments specified: {0}, have {1} args", token, args.Length);
                             return false;
                         }
                         else
@@ -90,7 +90,7 @@ namespace VitaDefiler.Modules
             }
             catch (IOException ex)
             {
-                Console.Error.WriteLine("Error parsing script: {0}", ex.Message);
+                Defiler.ErrLine("Error parsing script: {0}", ex.Message);
                 return false;
             }
         }

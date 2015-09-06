@@ -46,10 +46,10 @@ namespace VitaDefiler.Modules
                 Encoding.ASCII.GetBytes(srcpath, 0, srcpath.Length, req, sizeof(int));
                 if (dev.Network.RunCommand(Command.PullFile, req, out data) == Command.Error)
                 {
-                    Console.Error.WriteLine("Error pulling file.");
+                    Defiler.ErrLine("Error pulling file.");
                     return false;
                 }
-                Console.Error.WriteLine("Receiving {0}", dstpath);
+                Defiler.ErrLine("Receiving {0}", dstpath);
                 using (FileStream fs = File.OpenWrite(dstpath))
                 {
                     fs.Write(data, 0, data.Length);
@@ -58,14 +58,14 @@ namespace VitaDefiler.Modules
             }
             catch (IOException ex)
             {
-                Console.Error.WriteLine(ex.ToString());
+                Defiler.ErrLine(ex.ToString());
                 return false;
             }
         }
 
         public bool Push(Device dev, string srcpath, string dstpath)
         {
-            Console.Error.WriteLine("Sending {0}", srcpath);
+            Defiler.ErrLine("Sending {0}", srcpath);
             try
             {
                 byte[] data = File.ReadAllBytes(srcpath);
@@ -76,14 +76,14 @@ namespace VitaDefiler.Modules
                 Array.Copy(data, 0, req, sizeof(int) + dstpath.Length, data.Length);
                 if (dev.Network.RunCommand(Command.PushFile, req, out resp) == Command.Error)
                 {
-                    Console.Error.WriteLine("Error pushing file.");
+                    Defiler.ErrLine("Error pushing file.");
                     return false;
                 }
                 return true;
             }
             catch (IOException ex)
             {
-                Console.Error.WriteLine(ex.ToString());
+                Defiler.ErrLine(ex.ToString());
                 return false;
             }
         }

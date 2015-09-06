@@ -86,7 +86,7 @@ file    Filename relative to current working directory or absolute path.
         {
             byte[] resp;
             dev.Network.RunCommand(Command.Echo, Encoding.ASCII.GetBytes(text), out resp);
-            Console.WriteLine(Encoding.ASCII.GetString(resp));
+            Defiler.LogLine(Encoding.ASCII.GetString(resp));
         }
 
         public void PrintVars(Device dev)
@@ -98,11 +98,11 @@ file    Filename relative to current working directory or absolute path.
                 {
                     continue;
                 }
-                Console.WriteLine("${0}: 0x{1:X}, size: 0x{2:X}, code: {3}", i, dataVars[i].Data, dataVars[i].Size, dataVars[i].IsCode);
+                Defiler.LogLine("${0}: 0x{1:X}, size: 0x{2:X}, code: {3}", i, dataVars[i].Data, dataVars[i].Size, dataVars[i].IsCode);
             }
             foreach (KeyValuePair<string, uint> entry in dev.Locals)
             {
-                Console.WriteLine("%{0}: 0x{1:X}", entry.Key, entry.Value);
+                Defiler.LogLine("%{0}: 0x{1:X}", entry.Key, entry.Value);
             }
         }
     }

@@ -215,13 +215,13 @@ namespace VitaDefiler.PSM
 
             if (string.IsNullOrEmpty(serial))
             {
-                Console.WriteLine("USB device not connected.");
+                Defiler.ErrLine("USB device not connected.");
                 throw new NotSupportedException("Must call ConnectUSB() first!");
             }
             port = TransportFunctions.GetVitaPortWithSerial(serial);
             if (port == null)
             {
-                Console.WriteLine("Cannot find serial port for {0}", serial);
+                Defiler.ErrLine("Cannot find serial port for {0}", serial);
                 throw new IOException("Cannot find serial port.");
             }
             return new VitaUSBConnection(port);
@@ -229,7 +229,7 @@ namespace VitaDefiler.PSM
 
         public static PlayerInfo GetPlayerForWireless()
         {
-            Console.WriteLine("Waiting for Vita connection on the network...");
+            Defiler.MsgLine("Waiting for Vita connection on the network...");
             List<Socket> multicastSockets = InitSockets();
             while (true)
             {
@@ -270,7 +270,7 @@ namespace VitaDefiler.PSM
                 if (text.StartsWith("XXVCMDXX:"))
                 {
 #if DEBUG
-                    Console.Error.WriteLine("[Vita] {0}", text);
+                    Defiler.LogLine("[Vita] {0}", text);
 #endif
                     string[] cmd = text.Trim().Split(':');
                     switch (cmd[1])
@@ -278,23 +278,23 @@ namespace VitaDefiler.PSM
                         case "IP":
                             _host = cmd[2];
                             _port = Int32.Parse(cmd[3]);
-                            Console.Error.WriteLine("Found Vita network at {0}:{1}", _host, _port);
+                            Defiler.MsgLine("Found Vita network at {0}:{1}", _host, _port);
                             break;
                         case "DONE":
-                            Console.Error.WriteLine("Vita done initializing");
+                            Defiler.MsgLine("Vita done initializing");
                             doneinit.Set();
                             break;
                         default:
-                            Console.Error.WriteLine("Unrecognized startup command");
+                            Defiler.ErrLine("Unrecognized startup command");
                             break;
                     }
                 }
                 else
                 {
-                    Console.Error.WriteLine("[Vita] {0}", text);
+                    Defiler.LogLine("[Vita] {0}", text);
                 }
             });
-            Console.Error.WriteLine("Waiting for app to finish launching...");
+            Defiler.MsgLine("Waiting for app to finish launching...");
             doneinit.WaitOne();
             host = _host;
             port = _port;
@@ -308,7 +308,7 @@ namespace VitaDefiler.PSM
             exploit = new Exploit((serial) =>
             {
                 ConnectionFinder.PlayerInfo info = ConnectionFinder.GetPlayerForWireless();
-                Console.WriteLine("Found: {0}", info);
+                Defiler.MsgLine("Found: {0}", info);
                 Socket debugsock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 Socket logsock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 try
@@ -318,7 +318,7 @@ namespace VitaDefiler.PSM
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("Unable to connect to {0}:{1}", info.m_IPEndPoint.Address, info.m_DebuggerPort);
+                    Defiler.ErrLine("Unable to connect to {0}:{1}", info.m_IPEndPoint.Address, info.m_DebuggerPort);
                     throw;
                 }
 
@@ -353,12 +353,12 @@ namespace VitaDefiler.PSM
                                     line = line.Substring(index);
                                 }
 
-                                Console.Error.WriteLine("[Vita] {0}", line);
+                                Defiler.LogLine("[Vita] {0}", line);
                             }
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e.ToString()); // We want to know what went wrong.
+                            Defiler.ErrLine(e.ToString()); // We want to know what went wrong.
                         }
                     }
                 })).Start();
@@ -376,9 +376,9 @@ namespace VitaDefiler.PSM
             // run exploit
             exploit.Connect(false, (text) =>
             {
-                Console.WriteLine("[Vita] {0}", text);
+                Defiler.LogLine("[Vita] {0}", text);
             });
-            Console.Error.WriteLine("Waiting for network connection...");
+            Defiler.MsgLine("Waiting for network connection...");
             doneinit.WaitOne();
             // suspend
             exploit.SuspendVM();

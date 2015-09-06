@@ -44,7 +44,7 @@ namespace VitaDefiler.Modules
         {
             if (!File.Exists(file))
             {
-                Console.Error.WriteLine("Cannot find {0}", file);
+                Defiler.ErrLine("Cannot find {0}", file);
                 return;
             }
             ProcessStartInfo info = new ProcessStartInfo(){
@@ -54,11 +54,11 @@ namespace VitaDefiler.Modules
                 UseShellExecute = false
             };
             Process gcc = Process.Start(info);
-            Console.Error.WriteLine(gcc.StandardOutput.ReadToEnd());
+            Defiler.ErrLine(gcc.StandardOutput.ReadToEnd());
             gcc.WaitForExit();
             if (!File.Exists(TEMP_OBJECT))
             {
-                Console.Error.WriteLine("GCC did not produce a valid output");
+                Defiler.ErrLine("GCC did not produce a valid output");
                 return;
             }
             info = new ProcessStartInfo(){
@@ -68,12 +68,12 @@ namespace VitaDefiler.Modules
                 UseShellExecute = false
             };
             Process objcopy = Process.Start(info);
-            Console.Error.WriteLine(objcopy.StandardOutput.ReadToEnd());
+            Defiler.ErrLine(objcopy.StandardOutput.ReadToEnd());
             objcopy.WaitForExit();
             File.Delete(TEMP_OBJECT);
             if (!File.Exists(output))
             {
-                Console.Error.WriteLine("No valid binary was produced.");
+                Defiler.ErrLine("No valid binary was produced.");
             }
         }
 
@@ -84,7 +84,7 @@ namespace VitaDefiler.Modules
             if (dev.Network.RunCommand(Command.Execute, args, out resp) != Command.Error)
             {
                 ret = BitConverter.ToUInt32(resp, 0);
-                Console.Error.WriteLine("Return value: 0x{0:X}", ret);
+                Defiler.ErrLine("Return value: 0x{0:X}", ret);
                 dev.LastReturn = ret;
             }
         }

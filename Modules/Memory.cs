@@ -69,7 +69,7 @@ namespace VitaDefiler.Modules
             num = 0;
             if (addr == 0 || length == 0)
             {
-                Console.Error.WriteLine("Ignoring invalid read request. Are your params correct?");
+                Defiler.ErrLine("Ignoring invalid read request. Are your params correct?");
                 return;
             }
             try
@@ -79,10 +79,10 @@ namespace VitaDefiler.Modules
                 for (uint l = 0; l < length; l += BLOCK_SIZE)
                 {
                     uint size = l + BLOCK_SIZE > length ? length % BLOCK_SIZE : BLOCK_SIZE;
-                    Console.Error.WriteLine("Dumping 0x{0:X}", addr + l);
+                    Defiler.ErrLine("Dumping 0x{0:X}", addr + l);
                     if (dev.Network.RunCommand(Command.ReadData, new uint[]{addr+l, size}, out data) == Command.Error)
                     {
-                        Console.Error.WriteLine("Read failed.");
+                        Defiler.ErrLine("Read failed.");
                         break;
                     }
                     if (file != null)
@@ -102,7 +102,7 @@ namespace VitaDefiler.Modules
             }
             catch (IOException ex)
             {
-                Console.Error.WriteLine("Error writing to file: {0}", ex.Message);
+                Defiler.ErrLine("Error writing to file: {0}", ex.Message);
             }
         }
 
@@ -110,7 +110,7 @@ namespace VitaDefiler.Modules
         {
             if (length == 0)
             {
-                Console.Error.WriteLine("Ignoring request to read 0 bytes. Are your params correct?");
+                Defiler.ErrLine("Ignoring request to read 0 bytes. Are your params correct?");
                 return;
             }
             FileStream fs = file == null ? null : File.OpenWrite(file);
@@ -125,7 +125,7 @@ namespace VitaDefiler.Modules
         {
             if (addr == 0)
             {
-                Console.Error.WriteLine("Ignoring invalid write request. Are your params correct?");
+                Defiler.ErrLine("Ignoring invalid write request. Are your params correct?");
                 return;
             }
             byte[] resp;
@@ -133,11 +133,11 @@ namespace VitaDefiler.Modules
             {
                 if (dev.Network.RunCommand(isCode ? Command.WriteCode : Command.WriteData, new uint[] { addr, length, data }, out resp) == Command.Error)
                 {
-                    Console.Error.WriteLine("Write failed.");
+                    Defiler.ErrLine("Write failed.");
                 }
                 else
                 {
-                    Console.Error.WriteLine("Wrote 0x{0:X} byte.", BitConverter.ToInt32(resp, 0));
+                    Defiler.ErrLine("Wrote 0x{0:X} byte.", BitConverter.ToInt32(resp, 0));
                 }
             }
             else
@@ -166,24 +166,24 @@ namespace VitaDefiler.Modules
                         {
                             break;
                         }
-                        Console.Error.WriteLine("Writing 0x{0:X}", addr + l);
+                        Defiler.ErrLine("Writing 0x{0:X}", addr + l);
                         Array.Copy(BitConverter.GetBytes(addr + l), 0, buf, 0, sizeof(int));
                         Array.Copy(BitConverter.GetBytes(size), 0, buf, sizeof(int), sizeof(int));
                         if (dev.Network.RunCommand(isCode ? Command.WriteCode : Command.WriteData, buf, out resp) == Command.Error)
                         {
-                            Console.Error.WriteLine("Write failed.");
+                            Defiler.ErrLine("Write failed.");
                             break;
                         }
                         else
                         {
-                            Console.Error.WriteLine("Wrote 0x{0:X} byte.", BitConverter.ToInt32(resp, 0));
+                            Defiler.ErrLine("Wrote 0x{0:X} byte.", BitConverter.ToInt32(resp, 0));
                         }
                     }
                     fin.Close();
                 }
                 catch (IOException ex)
                 {
-                    Console.Error.WriteLine("Error writing to file: {0}", ex.Message);
+                    Defiler.ErrLine("Error writing to file: {0}", ex.Message);
                 }
             }
         }
@@ -192,7 +192,7 @@ namespace VitaDefiler.Modules
         {
             if (length == 0)
             {
-                Console.Error.WriteLine("Ignoring request to allocate 0 bytes. Are your params correct?");
+                Defiler.ErrLine("Ignoring request to allocate 0 bytes. Are your params correct?");
                 return;
             }
             uint addr = (uint)dev.Network.RunCommand(isCode ? Command.AllocateCode : Command.AllocateData, (int)length);
@@ -203,7 +203,7 @@ namespace VitaDefiler.Modules
             }
             else
             {
-                Console.Error.WriteLine("Allocate failed.");
+                Defiler.ErrLine("Allocate failed.");
             }
         }
 

@@ -262,7 +262,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevConnect(guid);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevConnect(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevConnect(0x{0:X8} : {1})", num, GetErrStr(num));
                 mInfoMutex.ReleaseMutex();
                 return num;
             }
@@ -275,7 +275,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevCreatePackage(packageFile, dirForPack);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevCreatePackage(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevCreatePackage(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -286,7 +286,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevDisconnect(deviceGuid);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevDisconnect(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevDisconnect(0x{0:X8} : {1})", num, GetErrStr(num));
                 mInfoMutex.ReleaseMutex();
                 return num;
             }
@@ -299,7 +299,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevExistAppExeKey(deviceGuid, accountId, titleIdentifier, env);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevExistAppExeKey(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevExistAppExeKey(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -309,7 +309,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevExtractPackage(dirExtract, packageFile);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevExtractPackage(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevExtractPackage(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -319,7 +319,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevGetDeviceSeed(deviceGuid, filename);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevGetDeviceSeed(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevGetDeviceSeed(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -350,7 +350,7 @@ namespace VitaDefiler.PSM
             errstr = (length == 0) ? "" : builder.ToString().Substring(0, length);
             if (length < 0)
             {
-                Console.WriteLine("Error. scePsmDevGetErrStr(0x{0:X8} : {1})", length, GetErrStr(length));
+                Defiler.ErrLine("Error. scePsmDevGetErrStr(0x{0:X8} : {1})", length, GetErrStr(length));
             }
             return length;
         }
@@ -362,7 +362,7 @@ namespace VitaDefiler.PSM
             logstr = (length == 0) ? "" : builder.ToString().Substring(0, length);
             if (length < 0)
             {
-                Console.WriteLine("Error. scePsmDevGetLog(0x{0:X8} : {1})", length, GetErrStr(length));
+                Defiler.ErrLine("Error. scePsmDevGetLog(0x{0:X8} : {1})", length, GetErrStr(length));
             }
             return length;
         }
@@ -448,7 +448,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevInstall(deviceGuid, packageFile, appId);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevInstall(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevInstall(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -458,7 +458,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevKill(deviceGuid);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevKill(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevKill(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -468,7 +468,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevLaunch(deviceGuid, appId, debug, profile, keepnet, logwaiting, arg);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevLaunch(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevLaunch(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -478,7 +478,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevListApplications(deviceGuid, list);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevListApplications(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevListApplications(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -511,7 +511,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevPickFileFromPackage(outName, packageFile, inName);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevPickFileFromPackage(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevPickFileFromPackage(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -633,7 +633,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevSetAppExeKey(deviceGuid, filename);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevSetAppExeKey(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevSetAppExeKey(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -643,7 +643,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevSetConsoleWrite(deviceGuid, proc);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevSetConsoleWrite(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevSetConsoleWrite(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -653,7 +653,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevUninstall(deviceGuid, appId);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevUninstall(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevUninstall(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -668,7 +668,7 @@ namespace VitaDefiler.PSM
             int num = _scePsmDevVersion(deviceGuid);
             if (num < 0)
             {
-                Console.WriteLine("Error. scePsmDevVersion(0x{0:X8} : {1})", num, GetErrStr(num));
+                Defiler.ErrLine("Error. scePsmDevVersion(0x{0:X8} : {1})", num, GetErrStr(num));
             }
             return num;
         }
@@ -680,7 +680,7 @@ namespace VitaDefiler.PSM
             int code = _scePsmDevGetAgentVersion(deviceGuid, buffer, buffer2);
             if (code < 0)
             {
-                Console.WriteLine("Error. scePsmDevGetAgentVersion: {0}", GetErrStr(code));
+                Defiler.ErrLine("Error. scePsmDevGetAgentVersion: {0}", GetErrStr(code));
                 return code;
             }
             psm_devagent_verstr = Encoding.ASCII.GetString(buffer).TrimEnd(new char[1]);
@@ -693,7 +693,7 @@ namespace VitaDefiler.PSM
             int code = _scePsmDevLaunchUnity(deviceGuid, appName, argnum, argstr);
             if (code < 0)
             {
-                Console.WriteLine("Error. scePsmDevLaunchUnity: {0}", GetErrStr(code));
+                Defiler.ErrLine("Error. scePsmDevLaunchUnity: {0}", GetErrStr(code));
             }
             return code;
         }
@@ -2047,7 +2047,7 @@ namespace VitaDefiler.PSM
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    Defiler.ErrLine(ex.Message);
                     break;
                 }
             }

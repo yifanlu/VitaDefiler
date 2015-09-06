@@ -8,6 +8,7 @@ namespace VitaDefilerConsole
     {
         static void Main(string[] args)
         {
+            DefilerDevice dev;
             int scriptIndex = 0;
             bool enablegui = true;
             string package = null;
@@ -60,7 +61,8 @@ namespace VitaDefilerConsole
                     Array.Copy(args, scriptIndex + 1, scriptargs, 0, args.Length - scriptIndex - 1);
                 }
 
-                Defiler.Run(package, enablegui, script, scriptargs);
+                dev = Defiler.Setup(package, enablegui);
+                Defiler.CommandRunner(dev, script, scriptargs);
             }
         }
     }

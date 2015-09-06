@@ -56,7 +56,7 @@ namespace VitaDefiler
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Error connecting to Vita network: {0}", ex.Message);
+                Defiler.ErrLine("Error connecting to Vita network: {0}", ex.Message);
                 return false;
             }
         }
@@ -120,7 +120,7 @@ namespace VitaDefiler
                 Array.Copy(BitConverter.GetBytes(data.Length), 0, packet, sizeof(int), sizeof(int));
                 Array.Copy(data, 0, packet, 2 * sizeof(int), data.Length);
 #if DEBUG
-                Console.Error.WriteLine("Sending packet of {0} bytes.", packet.Length);
+                Defiler.LogLine("Sending packet of {0} bytes.", packet.Length);
                 packet.PrintHexDump((uint)packet.Length, 16);
 #endif
                 _sock.Send(packet);
@@ -136,7 +136,7 @@ namespace VitaDefiler
                 length = BitConverter.ToInt32(recv, sizeof(int));
                 total = 0;
 #if DEBUG
-                Console.Error.WriteLine("Recieving header of {0} bytes.", recv.Length);
+                Defiler.LogLine("Recieving header of {0} bytes.", recv.Length);
                 recv.PrintHexDump((uint)recv.Length, 16);
 #endif
                 // recieve response
@@ -146,25 +146,25 @@ namespace VitaDefiler
                     total += _sock.Receive(response, total, length - total, SocketFlags.None);
                 }
 #if DEBUG
-                Console.Error.WriteLine("Recieving response of {0} bytes.", response.Length);
+                Defiler.LogLine("Recieving response of {0} bytes.", response.Length);
 #endif
                 // check for error
                 if (resp == Command.Error)
                 {
-                    Console.Error.WriteLine("Error from Vita: {0}", Encoding.ASCII.GetString(response));
+                    Defiler.ErrLine("Error from Vita: {0}", Encoding.ASCII.GetString(response));
                     response = new byte[0];
                 }
                 return resp;
             }
             catch (SocketException ex)
             {
-                Console.Error.WriteLine("Vita is not responding, socket error: {0}", ex.Message);
+                Defiler.ErrLine("Vita is not responding, socket error: {0}", ex.Message);
                 response = new byte[0];
                 return Command.Error;
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Error trying to run command {0}: {1}", cmd, ex.Message);
+                Defiler.ErrLine("Error trying to run command {0}: {1}", cmd, ex.Message);
                 response = new byte[0];
                 return Command.Error;
             }
