@@ -5,8 +5,8 @@ using System.Text;
 
 namespace VitaDefiler.Modules
 {
-    interface IModule
+    public interface IModule
     {
-        bool Run(Device dev, string cmd, string[] args);
+        bool Run(IDevice device, string cmd, string[] args);
     }
 }

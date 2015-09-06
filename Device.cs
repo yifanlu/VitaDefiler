@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace VitaDefiler
 {
-    struct Variable
+    public struct Variable
     {
         public static readonly Variable Null = new Variable();
         public uint Data;
@@ -11,11 +11,11 @@ namespace VitaDefiler
         public bool IsCode;
     }
 
-    public interface DefilerDevice
+    public interface IDevice
     {
     }
 
-    class Device : DefilerDevice
+    class Device : IDevice
     {
         public List<Variable> Vars { get; private set; }
         public Dictionary<string, uint> Locals { get; private set; }

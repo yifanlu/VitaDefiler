@@ -6,12 +6,13 @@ using System.IO;
 
 namespace VitaDefiler.Modules
 {
-    class Memory : IModule
+    public class Memory : IModule
     {
         public static readonly uint BLOCK_SIZE = 0x100;
 
-        public bool Run(Device dev, string cmd, string[] args)
+        public bool Run(IDevice device, string cmd, string[] args)
         {
+            Device dev = (Device)device;
             switch (cmd)
             {
                 case "usbread":
@@ -64,8 +65,9 @@ namespace VitaDefiler.Modules
             return false;
         }
 
-        public static void Read(Device dev, uint addr, uint length, out uint num, string file = null)
+        public static void Read(IDevice device, uint addr, uint length, out uint num, string file = null)
         {
+            Device dev = (Device)device;
             num = 0;
             if (addr == 0 || length == 0)
             {
@@ -106,8 +108,9 @@ namespace VitaDefiler.Modules
             }
         }
 
-        public static void USBRead(Device dev, uint addr, uint length, string file = null)
+        public static void USBRead(IDevice device, uint addr, uint length, string file = null)
         {
+            Device dev = (Device)device;
             if (length == 0)
             {
                 Defiler.ErrLine("Ignoring request to read 0 bytes. Are your params correct?");
@@ -121,8 +124,9 @@ namespace VitaDefiler.Modules
             }
         }
 
-        public static void Write(Device dev, uint addr, uint length, bool isCode, uint data = 0, string file = null)
+        public static void Write(IDevice device, uint addr, uint length, bool isCode, uint data = 0, string file = null)
         {
+            Device dev = (Device)device;
             if (addr == 0)
             {
                 Defiler.ErrLine("Ignoring invalid write request. Are your params correct?");
@@ -188,27 +192,31 @@ namespace VitaDefiler.Modules
             }
         }
 
-        public void Allocate(Device dev, uint length, bool isCode)
+        public Variable Allocate(IDevice device, uint length, bool isCode)
         {
+            Device dev = (Device)device;
             if (length == 0)
             {
                 Defiler.ErrLine("Ignoring request to allocate 0 bytes. Are your params correct?");
-                return;
+                return Variable.Null;
             }
             uint addr = (uint)dev.Network.RunCommand(isCode ? Command.AllocateCode : Command.AllocateData, (int)length);
             if (addr > 0)
             {
                 int idx = dev.CreateVariable(addr, length, isCode);
                 dev.LastReturn = addr;
+                return dev.Vars[idx];
             }
             else
             {
                 Defiler.ErrLine("Allocate failed.");
+                return Variable.Null;
             }
         }
 
-        public void Free(Device dev, Variable var)
+        public void Free(IDevice device, Variable var)
         {
+            Device dev = (Device)device;
             dev.Network.RunCommand(var.IsCode ? Command.FreeCode : Command.FreeData, (int)var.Data);
             dev.DeleteVariable(var);
         }

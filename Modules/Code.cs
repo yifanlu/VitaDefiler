@@ -7,12 +7,13 @@ using System.Text;
 
 namespace VitaDefiler.Modules
 {
-    class Code : IModule
+    public class Code : IModule
     {
     	private static readonly string TEMP_OBJECT = "code.o";
 
-        public bool Run(Device dev, string cmd, string[] args)
+        public bool Run(IDevice device, string cmd, string[] args)
         {
+            Device dev = (Device)device;
             switch (cmd)
             {
                 case "compile":
@@ -40,8 +41,9 @@ namespace VitaDefiler.Modules
             return false;
         }
 
-        public void Compile(Device dev, string file, string output)
+        public void Compile(IDevice device, string file, string output)
         {
+            Device dev = (Device)device;
             if (!File.Exists(file))
             {
                 Defiler.ErrLine("Cannot find {0}", file);
@@ -77,8 +79,9 @@ namespace VitaDefiler.Modules
             }
         }
 
-        public void Execute(Device dev, uint[] args)
+        public void Execute(IDevice device, uint[] args)
         {
+            Device dev = (Device)device;
             byte[] resp;
             uint ret;
             if (dev.Network.RunCommand(Command.Execute, args, out resp) != Command.Error)

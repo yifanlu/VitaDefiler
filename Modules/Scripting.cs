@@ -6,8 +6,9 @@ namespace VitaDefiler.Modules
 {
     class Scripting : IModule
     {
-        public bool Run(Device dev, string cmd, string[] args)
+        public bool Run(IDevice device, string cmd, string[] args)
         {
+            Device dev = (Device)device;
             switch (cmd)
             {
                 case "set":
@@ -57,8 +58,9 @@ namespace VitaDefiler.Modules
             return false;
         }
 
-        public bool ParseScript(Device dev, string filename, string[] args)
+        public bool ParseScript(IDevice device, string filename, string[] args)
         {
+            Device dev = (Device)device;
             try
             {
                 string script = File.ReadAllText(filename, Encoding.ASCII);

@@ -52,8 +52,9 @@ length  Can be a hex number (ex: 0x1000), a decimal number (ex: 256), or a data 
 file    Filename relative to current working directory or absolute path.
 ";
 
-        public bool Run(Device dev, string cmd, string[] args)
+        public bool Run(IDevice device, string cmd, string[] args)
         {
+            Device dev = (Device)device;
             switch (cmd)
             {
                 case "help":

@@ -4,10 +4,11 @@ using System.Text;
 
 namespace VitaDefiler.Modules
 {
-    class FileIO : IModule
+    public class FileIO : IModule
     {
-        public bool Run(Device dev, string cmd, string[] args)
+        public bool Run(IDevice device, string cmd, string[] args)
         {
+            Device dev = (Device)device;
             switch (cmd)
             {
                 case "pull":
@@ -36,8 +37,9 @@ namespace VitaDefiler.Modules
             return false;
         }
 
-        public bool Pull(Device dev, string srcpath, string dstpath)
+        public bool Pull(IDevice device, string srcpath, string dstpath)
         {
+            Device dev = (Device)device;
             try
             {
                 byte[] req = new byte[sizeof(int) + srcpath.Length];
@@ -63,8 +65,9 @@ namespace VitaDefiler.Modules
             }
         }
 
-        public bool Push(Device dev, string srcpath, string dstpath)
+        public bool Push(IDevice device, string srcpath, string dstpath)
         {
+            Device dev = (Device)device;
             Defiler.ErrLine("Sending {0}", srcpath);
             try
             {

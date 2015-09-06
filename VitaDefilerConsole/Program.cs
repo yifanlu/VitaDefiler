@@ -8,7 +8,7 @@ namespace VitaDefilerConsole
     {
         static void Main(string[] args)
         {
-            DefilerDevice dev;
+            IDevice dev;
             int scriptIndex = 0;
             bool enablegui = true;
             string package = null;

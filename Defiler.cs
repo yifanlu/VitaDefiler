@@ -37,7 +37,7 @@ namespace VitaDefiler
             _msgstream = msg;
         }
 
-        public static DefilerDevice Setup(ProgressCallback pgs = null, string package = null, bool enableGui = true)
+        public static IDevice Setup(ProgressCallback pgs = null, string package = null, bool enableGui = true)
         {
             if (pgs != null) pgs(0.0f);
 
@@ -137,14 +137,14 @@ namespace VitaDefiler
             return dev;
         }
 
-        public static void Exit(DefilerDevice device)
+        public static void Exit(IDevice device)
         {
             Device dev = device as Device;
             dev.Network.RunCommand(Command.Exit);
             dev.Exploit.Disconnect();
         }
 
-        public static void CommandRunner(DefilerDevice device, string script = null, string[] args = null)
+        public static void CommandRunner(IDevice device, string script = null, string[] args = null)
         {
             Device dev = device as Device;
             // initialize the modules
