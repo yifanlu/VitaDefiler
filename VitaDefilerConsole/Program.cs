@@ -61,7 +61,7 @@ namespace VitaDefilerConsole
                     Array.Copy(args, scriptIndex + 1, scriptargs, 0, args.Length - scriptIndex - 1);
                 }
 
-                dev = Defiler.Setup(null, package, enablegui);
+                dev = Defiler.Setup(null, null, package, enablegui);
                 Defiler.CommandRunner(dev, script, scriptargs);
             }
         }
