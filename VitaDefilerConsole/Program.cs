@@ -11,6 +11,7 @@ namespace VitaDefilerConsole
             IDevice dev;
             int scriptIndex = 0;
             bool enablegui = true;
+            bool noexploit = false;
             string package = null;
             string script = null;
             string[] scriptargs = new string[0];
@@ -31,6 +32,11 @@ namespace VitaDefilerConsole
                         enablegui = false;
                         break;
 
+                    case "-noexploit":
+                        ++scriptIndex;
+                        noexploit = true;
+                        break;
+
                     case "-pkg":
                         package = i + 1 < args.Length ? args[i + 1] : null;
                         i++;
@@ -38,30 +44,40 @@ namespace VitaDefilerConsole
                         break;
 
                     default:
-                        Console.Error.WriteLine("Ignoring unknown argument: {0}", arg[i]);
+                        if (arg.StartsWith("-"))
+                        {
+                            Console.Error.WriteLine("Ignoring unknown argument: {0}", arg);
+                        }
                         break;
                 }
+            }
 
-                // kill PSM
+            // kill PSM
+            if (Environment.OSVersion.VersionString.Contains("Microsoft Windows"))
+            {
                 Process[] potential = Process.GetProcesses();
                 foreach (Process process in potential)
                 {
-                    if (process.ProcessName.StartsWith("PsmDevice") || process.ProcessName.StartsWith("PsmDeviceUnity"))
+                    if (process.ProcessName.StartsWith("PsmDevice"))
                     {
                         Console.WriteLine("Killing PsmDevice process {0}", process.Id);
                         process.Kill();
                     }
                 }
+            }
 
-                // parse script args
-                if (args.Length > scriptIndex)
-                {
-                    script = args[scriptIndex];
-                    scriptargs = new string[args.Length - scriptIndex - 1];
-                    Array.Copy(args, scriptIndex + 1, scriptargs, 0, args.Length - scriptIndex - 1);
-                }
+            // parse script args
+            if (args.Length > scriptIndex)
+            {
+                script = args[scriptIndex];
+                scriptargs = new string[args.Length - scriptIndex - 1];
+                Array.Copy(args, scriptIndex + 1, scriptargs, 0, args.Length - scriptIndex - 1);
+            }
 
-                dev = Defiler.Setup(null, package, enablegui);
+            dev = Defiler.Setup(null, package, enablegui, noexploit);
+
+            if (dev != null)
+            {
                 Defiler.CommandRunner(dev, script, scriptargs);
             }
         }

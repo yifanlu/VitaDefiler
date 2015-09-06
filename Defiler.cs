@@ -37,7 +37,7 @@ namespace VitaDefiler
             _msgstream = msg;
         }
 
-        public static IDevice Setup(ProgressCallback pgs = null, string package = null, bool enableGui = true)
+        public static IDevice Setup(ProgressCallback pgs = null, string package = null, bool enableGui = true, bool noExploit = false)
         {
             if (pgs != null) pgs(0.0f);
 
@@ -50,10 +50,16 @@ namespace VitaDefiler
             int port;
             
 #if USE_UNITY
-            ExploitFinder.CreateFromWireless(package, out exploit, out host, out port);
+            ExploitFinder.CreateFromWireless(package, noExploit, out exploit, out host, out port);
 #else
-            ExploitFinder.CreateFromUSB(package, out exploit, out host, out port);
+            ExploitFinder.CreateFromUSB(package, noExploit, out exploit, out host, out port);
 #endif
+
+            if (noExploit)
+            {
+                return null;
+            }
+
             if (pgs != null) pgs(0.2f);
 
 #if !NO_EXPLOIT
