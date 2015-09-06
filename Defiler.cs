@@ -9,6 +9,7 @@ namespace VitaDefiler
 {
     public class Defiler
     {
+        public delegate void ProgressCallback(float percent);
         static readonly Type[] Mods = {typeof(Code), typeof(General), typeof(Memory), typeof(FileIO), typeof(Scripting)};
         static TextWriter _logstream = Console.Out;
         static TextWriter _errstream = Console.Error;
@@ -36,11 +37,12 @@ namespace VitaDefiler
             _msgstream = msg;
         }
 
-        public static DefilerDevice Setup(string package = null, bool enableGui = true)
+        public static DefilerDevice Setup(ProgressCallback pgs = null, string package = null, bool enableGui = true)
         {
+            if (pgs != null) pgs(0.0f);
+
             // set environment variables
             Environment.SetEnvironmentVariable("SCE_PSM_SDK", Path.Combine(Environment.CurrentDirectory, "support/psm"));
-
 
             // set up usb
             Exploit exploit;
@@ -52,6 +54,7 @@ namespace VitaDefiler
 #else
             ExploitFinder.CreateFromUSB(package, out exploit, out host, out port);
 #endif
+            if (pgs != null) pgs(0.2f);
 
 #if !NO_EXPLOIT
             uint images_hash_ptr;
@@ -60,10 +63,12 @@ namespace VitaDefiler
             uint libkernel_anchor;
             Defiler.MsgLine("Defeating ASLR...");
             exploit.DefeatASLR(out images_hash_ptr, out funcs[0], out funcs[1], out funcs[2], out funcs[3], out funcs[4], out libkernel_anchor);
+            if (pgs != null) pgs(0.4f);
             // exploit vita
 
             Defiler.MsgLine("Escalating privileges...");
             exploit.EscalatePrivilege(images_hash_ptr);
+            if (pgs != null) pgs(0.6f);
 #endif
 
 #if USE_UNITY
@@ -84,6 +89,7 @@ namespace VitaDefiler
             if (net.Connect(host, port))
             {
                 Defiler.MsgLine("Connected to Vita network");
+                if (pgs != null) pgs(0.8f);
             }
             else
             {
@@ -108,6 +114,7 @@ namespace VitaDefiler
                 Defiler.ErrLine("ERROR setting function pointers!");
             }
 #endif
+            if (pgs != null) pgs(0.9f);
 
             // set up RPC context
             Device dev = new Device(exploit, net);
@@ -126,6 +133,7 @@ namespace VitaDefiler
             dev.CreateLocal("logline", logline_func);
             dev.CreateLocal("libkernel_anchor", libkernel_anchor);
 #endif
+            if (pgs != null) pgs(1.0f);
             return dev;
         }
 
