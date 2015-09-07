@@ -7,6 +7,10 @@ using VitaDefiler.PSM;
 
 namespace VitaDefiler
 {
+    public interface IPlayer
+    {
+    }
+
     public class Defiler
     {
         public delegate void ProgressCallback(float percent);
@@ -37,7 +41,18 @@ namespace VitaDefiler
             _msgstream = msg;
         }
 
-        public static IDevice Setup(ProgressCallback pgs = null, string package = null, bool enableGui = true, bool noExploit = false)
+        public static IPlayer[] FindPlayers()
+        {
+            ConnectionFinder.PlayerInfo[] players = ConnectionFinder.FindPlayers();
+            IPlayer[] baseplayers = new IPlayer[players.Length];
+            for (int i = 0; i < players.Length; i++)
+            {
+                baseplayers[i] = players[i];
+            }
+            return baseplayers;
+        }
+
+        public static IDevice Setup(IPlayer hint = null, ProgressCallback pgs = null, string package = null, bool enableGui = true, bool noExploit = false)
         {
             if (pgs != null) pgs(0.0f);
 
@@ -50,7 +65,7 @@ namespace VitaDefiler
             int port;
             
 #if USE_UNITY
-            ExploitFinder.CreateFromWireless(package, noExploit, out exploit, out host, out port);
+            ExploitFinder.CreateFromWireless(hint as ConnectionFinder.PlayerInfo?, package, noExploit, out exploit, out host, out port);
 #else
             ExploitFinder.CreateFromUSB(package, noExploit, out exploit, out host, out port);
 #endif

@@ -127,9 +127,10 @@ namespace VitaDefiler.PSM
     {
         public static readonly int[] PLAYER_MULTICAST_PORTS = {54997, 34997, 57997, 58997};
         public const string PLAYER_MULTICAST_GROUP = "225.0.0.222";
+        private static List<Socket> _multicastSockets = null;
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct PlayerInfo
+        public struct PlayerInfo : IPlayer
         {
             public IPEndPoint m_IPEndPoint;
             public uint m_Flags;
@@ -139,9 +140,10 @@ namespace VitaDefiler.PSM
             public string m_Id;
             public bool m_AllowDebugging;
             public uint m_DebuggerPort;
+
             public override string ToString()
             {
-                return string.Format("PlayerInfo {0} {1} {2} {3} {4} {5} {6}:{7} {8}", new object[] { this.m_IPEndPoint.Address, this.m_IPEndPoint.Port, this.m_Flags, this.m_Guid, this.m_EditorGuid, this.m_Version, this.m_Id, this.m_DebuggerPort, this.m_AllowDebugging ? 1 : 0 });
+                return string.Format("{0}:{1}", new object[] { this.m_IPEndPoint.Address, this.m_IPEndPoint.Port });
             }
 
             public static PlayerInfo Parse(string playerString)
@@ -177,6 +179,10 @@ namespace VitaDefiler.PSM
 
         private static List<Socket> InitSockets()
         {
+            if (_multicastSockets != null)
+            {
+                return _multicastSockets;
+            }
             List<Socket> multicastSockets = new List<Socket>();
             NetworkInterface[] allNetworkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface netiface in allNetworkInterfaces)
@@ -206,6 +212,7 @@ namespace VitaDefiler.PSM
                     }
                 }
             }
+            _multicastSockets = multicastSockets;
             return multicastSockets;
         }
 
@@ -227,9 +234,33 @@ namespace VitaDefiler.PSM
             return new VitaUSBConnection(port);
         }
 
-        public static PlayerInfo GetPlayerForWireless()
+        public static PlayerInfo[] FindPlayers()
         {
-            Defiler.MsgLine("Waiting for Vita connection on the network...");
+            List<PlayerInfo> players = new List<PlayerInfo>();
+            List<Socket> multicastSockets = InitSockets();
+            foreach (Socket socket in multicastSockets)
+            {
+                while ((socket != null) && (socket.Available > 0))
+                {
+                    byte[] buffer = new byte[0x400];
+                    int count = socket.Receive(buffer);
+                    string playerString = Encoding.ASCII.GetString(buffer, 0, count);
+                    players.Add(PlayerInfo.Parse(playerString));
+                }
+            }
+            return players.ToArray();
+        }
+
+        public static PlayerInfo GetPlayerForWireless(PlayerInfo? player = null)
+        {
+            if (player.HasValue)
+            {
+                Defiler.MsgLine("Waiting for {0}...", player.Value.m_IPEndPoint);
+            }
+            else
+            {
+                Defiler.MsgLine("Waiting for Vita connection on the network...");
+            }
             List<Socket> multicastSockets = InitSockets();
             while (true)
             {
@@ -240,7 +271,12 @@ namespace VitaDefiler.PSM
                         byte[] buffer = new byte[0x400];
                         int count = socket.Receive(buffer);
                         string playerString = Encoding.ASCII.GetString(buffer, 0, count);
-                        return PlayerInfo.Parse(playerString);
+                        PlayerInfo current = PlayerInfo.Parse(playerString);
+                        if (player.HasValue && current.m_Guid != player.Value.m_Guid)
+                        {
+                            continue;
+                        }
+                        return current;
                     }
                 }
             }
@@ -307,14 +343,14 @@ namespace VitaDefiler.PSM
             port = _port;
         }
 
-        public static void CreateFromWireless(string package, bool noExploit, out Exploit exploit, out string host, out int port)
+        public static void CreateFromWireless(ConnectionFinder.PlayerInfo? player, string package, bool noExploit, out Exploit exploit, out string host, out int port)
         {
             string _host = string.Empty;
             int _port = 0;
             ManualResetEvent doneinit = new ManualResetEvent(false);
             exploit = new Exploit((serial) =>
             {
-                ConnectionFinder.PlayerInfo info = ConnectionFinder.GetPlayerForWireless();
+                ConnectionFinder.PlayerInfo info = ConnectionFinder.GetPlayerForWireless(player);
                 Defiler.MsgLine("Found: {0}", info);
                 Socket debugsock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 Socket logsock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
