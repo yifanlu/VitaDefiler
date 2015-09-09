@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PSM\DebuggerSupport.cs" />
     <Compile Include="Device.cs" />
     <Compile Include="Exploit.cs" />
     <Compile Include="Modules\Code.cs" />
@@ -66,7 +67,7 @@
     <Compile Include="Network.cs" />
     <Compile Include="Defiler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PSMSupport.cs" />
+    <Compile Include="PSM\PSMSupport.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
