@@ -13,6 +13,7 @@ namespace VitaDefiler.PSM
 {
     public delegate Connection GetConnection(string serial);
 
+#if !__MOBILE__
     class VitaUSBConnection : Connection
     {
         private int handle;
@@ -80,6 +81,7 @@ namespace VitaDefiler.PSM
             return;
         }
     }
+#endif
 
     class TcpConnection : Connection
     {
@@ -216,6 +218,7 @@ namespace VitaDefiler.PSM
             return multicastSockets;
         }
 
+#if !__MOBILE__
         public static Connection GetConnectionForUSB(string serial)
         {
             string port;
@@ -233,6 +236,7 @@ namespace VitaDefiler.PSM
             }
             return new VitaUSBConnection(port);
         }
+#endif
 
         public static PlayerInfo[] FindPlayers()
         {
@@ -287,6 +291,7 @@ namespace VitaDefiler.PSM
     {
         private static readonly int VITADEFILER_PORT = 4445;
 
+#if !__MOBILE__
         public static void CreateFromUSB(string package, bool noExploit, out Exploit exploit, out string host, out int port)
         {
             exploit = new Exploit(ConnectionFinder.GetConnectionForUSB);
@@ -342,6 +347,7 @@ namespace VitaDefiler.PSM
             host = _host;
             port = _port;
         }
+#endif
 
         public static void CreateFromWireless(ConnectionFinder.PlayerInfo? player, string package, bool noExploit, out Exploit exploit, out string host, out int port)
         {
@@ -413,11 +419,13 @@ namespace VitaDefiler.PSM
                 return new TcpConnection(debugsock);
             });
 
+#if !__MOBILE__
             // install package if we have to
             if (!string.IsNullOrEmpty(package))
             {
                 exploit.PackageInstallUSB(package);
             }
+#endif
 
             if (noExploit)
             {
