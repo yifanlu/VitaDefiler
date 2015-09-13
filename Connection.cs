@@ -292,7 +292,7 @@ namespace VitaDefiler.PSM
         private static readonly int VITADEFILER_PORT = 4445;
 
 #if !__MOBILE__
-        public static void CreateFromUSB(string package, out Exploit exploit, out string host, out int port)
+        public static void CreateFromUSB(string package, bool noExploit, out Exploit exploit, out string host, out int port)
         {
             exploit = new Exploit(ConnectionFinder.GetConnectionForUSB);
             ManualResetEvent doneinit = new ManualResetEvent(false);
@@ -303,6 +303,13 @@ namespace VitaDefiler.PSM
             if (!string.IsNullOrEmpty(package))
             {
                 exploit.PackageInstallUSB(package);
+            }
+
+            if (noExploit)
+            {
+                host = _host;
+                port = _port;
+                return;
             }
 
             // run exploit
@@ -342,7 +349,7 @@ namespace VitaDefiler.PSM
         }
 #endif
 
-        public static void CreateFromWireless(ConnectionFinder.PlayerInfo? player, string package, out Exploit exploit, out string host, out int port)
+        public static void CreateFromWireless(ConnectionFinder.PlayerInfo? player, string package, bool noExploit, out Exploit exploit, out string host, out int port)
         {
             string _host = string.Empty;
             int _port = 0;
@@ -419,6 +426,13 @@ namespace VitaDefiler.PSM
                 exploit.PackageInstallUSB(package);
             }
 #endif
+
+            if (noExploit)
+            {
+                host = _host;
+                port = _port;
+                return;
+            }
 
             // run exploit
             exploit.Connect(false, (text) =>

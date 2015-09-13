@@ -52,7 +52,7 @@ namespace VitaDefiler
             return baseplayers;
         }
 
-        public static IDevice Setup(IPlayer hint = null, ProgressCallback pgs = null, string package = null, bool enableGui = true)
+        public static IDevice Setup(IPlayer hint = null, ProgressCallback pgs = null, string package = null, bool enableGui = true, bool noExploit = false)
         {
             if (pgs != null) pgs(0.0f);
 
@@ -65,12 +65,18 @@ namespace VitaDefiler
             int port;
 
 #if USE_UNITY
-            ExploitFinder.CreateFromWireless(hint as ConnectionFinder.PlayerInfo?, package, out exploit, out host, out port);
+            ExploitFinder.CreateFromWireless(hint as ConnectionFinder.PlayerInfo?, package, noExploit, out exploit, out host, out port);
 #elif !__MOBILE__
             ExploitFinder.CreateFromUSB(package, out exploit, out host, out port);
 #else
-            throw new NotSupportedException("Neither Unity nor PSM is supported.");
+            ExploitFinder.CreateFromUSB(package, noExploit, out exploit, out host, out port);
 #endif
+
+            if (noExploit)
+            {
+                return null;
+            }
+
             if (pgs != null) pgs(0.2f);
 
 #if !NO_EXPLOIT
