@@ -18,7 +18,7 @@ namespace VitaDefilerConsole
 
             if (args.Length < 1)
             {
-                Console.Error.WriteLine("usage: VitaDefiler.exe [-pkg package] [-nodisp] [script args]\n    package is path to PSM package\n        You must run with -pkg for the first time!\n    nodisp starts client without logging to screen\n    script is the script to run\n    args are arguments for the script");
+                Console.Error.WriteLine("usage: VitaDefiler.exe [-rpc] [-pkg package] [-nodisp] [script args]\n    package is path to PSM package\n        You must run with -pkg for the first time!\n    nodisp starts client without logging to screen\n    script is the script to run\n    args are arguments for the script");
                 return;
             }
 
@@ -41,6 +41,9 @@ namespace VitaDefilerConsole
                         package = i + 1 < args.Length ? args[i + 1] : null;
                         i++;
                         scriptIndex += 2;
+                        break;
+
+                    case "-rpc":
                         break;
 
                     default:
@@ -67,7 +70,7 @@ namespace VitaDefilerConsole
             }
 
             // parse script args
-            if (args.Length > scriptIndex)
+            if (args.Length > scriptIndex && !args[scriptIndex].StartsWith("-"))
             {
                 script = args[scriptIndex];
                 scriptargs = new string[args.Length - scriptIndex - 1];
