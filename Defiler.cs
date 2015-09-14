@@ -67,9 +67,9 @@ namespace VitaDefiler
 #if USE_UNITY
             ExploitFinder.CreateFromWireless(hint as ConnectionFinder.PlayerInfo?, package, noExploit, out exploit, out host, out port);
 #elif !__MOBILE__
-            ExploitFinder.CreateFromUSB(package, out exploit, out host, out port);
-#else
             ExploitFinder.CreateFromUSB(package, noExploit, out exploit, out host, out port);
+#else
+            throw new NotSupportedException("Neither Unity nor PSM is supported.");
 #endif
 
             if (noExploit)
