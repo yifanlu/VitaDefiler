@@ -46,6 +46,13 @@ namespace VitaDefiler
             {
                 IPHostEntry ipHostInfo = Dns.GetHostEntry(host);
                 IPAddress ipAddress = ipHostInfo.AddressList[0];
+                foreach(IPAddress ip in ipHostInfo.AddressList)
+                {
+                    if(ip.AddressFamily == AddressFamily.InterNetwork){
+                        ipAddress = ip;
+                        break;
+                    }
+                }
                 IPEndPoint remoteEP = new IPEndPoint(ipAddress,port);
 
                 _sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
